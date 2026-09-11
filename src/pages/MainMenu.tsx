@@ -1,20 +1,38 @@
 import { motion } from 'framer-motion';
 import { useGameStore, actions } from '../store/gameStore';
+import { useState } from 'react';
 
 export default function MainMenu() {
   const user = useGameStore(s => s.user);
   const isAdmin = useGameStore(s => s.isAdmin);
   const localPlayer = useGameStore(s => s.localPlayer);
+  const [showModeSelect, setShowModeSelect] = useState(false);
+  const [showPrivateModal, setShowPrivateModal] = useState(false);
+  const [roomInput, setRoomInput] = useState('');
 
-  const menuItems = [
-    { label: '🎮 Jouer', action: () => actions.startGame(), color: 'from-green-500 to-emerald-600', shadow: 'shadow-green-500/30' },
-    { label: '🛒 Boutique', action: () => actions.setPage('shop'), color: 'from-purple-500 to-pink-600', shadow: 'shadow-purple-500/30' },
-    { label: '👤 Profil', action: () => actions.setPage('profile'), color: 'from-blue-500 to-cyan-600', shadow: 'shadow-blue-500/30' },
-  ];
+  const handlePlayPublic = () => {
+    setShowModeSelect(false);
+    actions.setSelectedMap('neon-city'); // Default, will be chosen in map select
+    actions.setGameMode('public');
+    actions.setPage('mapSelect');
+  };
 
-  if (isAdmin) {
-    menuItems.push({ label: '⚙️ Admin', action: () => actions.setPage('admin'), color: 'from-red-500 to-orange-600', shadow: 'shadow-red-500/30' });
-  }
+  const handleCreatePrivate = () => {
+    setShowModeSelect(false);
+    actions.setSelectedMap('neon-city');
+    actions.setGameMode('private');
+    actions.setPage('mapSelect');
+  };
+
+  const handleJoinPrivate = () => {
+    if (roomInput.length >= 4) {
+      setShowPrivateModal(false);
+      actions.setRoomCode(roomInput.toUpperCase());
+      actions.setSelectedMap('neon-city');
+      actions.setGameMode('private');
+      actions.setPage('mapSelect');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 relative overflow-hidden">
@@ -80,22 +98,58 @@ export default function MainMenu() {
           </div>
         </motion.div>
 
-        {/* Menu Buttons */}
-        <div className="flex flex-col gap-4 w-full max-w-sm">
-          {menuItems.map((item, i) => (
+        {/* Play Button - Main CTA */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, type: 'spring' }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowModeSelect(true)}
+          className="w-full max-w-sm py-5 px-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl text-white text-2xl font-black shadow-lg shadow-green-500/30 transition-all duration-200 border border-white/10 mb-4"
+        >
+          🎮 JOUER
+        </motion.button>
+
+        {/* Other buttons */}
+        <div className="flex flex-col gap-3 w-full max-w-sm">
+          <motion.button
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, type: 'spring' }}
+            whileHover={{ scale: 1.03, x: 5 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => actions.setPage('shop')}
+            className="w-full py-3 px-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl text-white text-lg font-bold shadow-lg shadow-purple-500/25 transition-all border border-white/10"
+          >
+            🛒 Boutique
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6, type: 'spring' }}
+            whileHover={{ scale: 1.03, x: 5 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => actions.setPage('profile')}
+            className="w-full py-3 px-8 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl text-white text-lg font-bold shadow-lg shadow-blue-500/25 transition-all border border-white/10"
+          >
+            👤 Profil
+          </motion.button>
+
+          {isAdmin && (
             <motion.button
-              key={item.label}
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + i * 0.1, type: 'spring' }}
-              whileHover={{ scale: 1.05, x: 10 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={item.action}
-              className={`w-full py-4 px-8 bg-gradient-to-r ${item.color} rounded-2xl text-white text-xl font-bold shadow-lg ${item.shadow} transition-all duration-200 border border-white/10`}
+              transition={{ delay: 0.7, type: 'spring' }}
+              whileHover={{ scale: 1.03, x: 5 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => actions.setPage('admin')}
+              className="w-full py-3 px-8 bg-gradient-to-r from-red-500 to-orange-600 rounded-2xl text-white text-lg font-bold shadow-lg shadow-red-500/25 transition-all border border-white/10"
             >
-              {item.label}
+              ⚙️ Admin
             </motion.button>
-          ))}
+          )}
         </div>
 
         {/* Logout */}
@@ -108,18 +162,138 @@ export default function MainMenu() {
         >
           Se déconnecter
         </motion.button>
+      </div>
 
-        {/* Game Info */}
+      {/* Mode Selection Modal */}
+      {showModeSelect && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-          className="mt-8 text-center text-gray-500 text-xs max-w-md"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowModeSelect(false)}
         >
-          <p>🔄 Swap toutes les 90 secondes • ⚔️ Construis des pièges • 💀 Élimine tes adversaires</p>
-          <p className="mt-1">🏆 Le dernier survivant remporte la partie !</p>
+          <motion.div
+            initial={{ scale: 0.8, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            className="bg-gray-900 rounded-3xl p-8 border border-gray-700 max-w-lg w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-black text-white text-center mb-6">Choisir le mode</h2>
+            
+            <div className="space-y-4">
+              {/* Public Match */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handlePlayPublic}
+                className="w-full p-5 bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-2 border-green-500/50 rounded-2xl text-left hover:border-green-400 transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl">🌍</span>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Match Public</h3>
+                    <p className="text-gray-400 text-sm">Affronte des joueurs du monde entier</p>
+                    <p className="text-green-400 text-xs mt-1">Matchmaking automatique • 2-9 joueurs</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Private Room */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCreatePrivate}
+                className="w-full p-5 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-2 border-purple-500/50 rounded-2xl text-left hover:border-purple-400 transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl">🔒</span>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Créer un salon privé</h3>
+                    <p className="text-gray-400 text-sm">Joue avec tes amis en privé</p>
+                    <p className="text-purple-400 text-xs mt-1">Code d'invitation • 2-9 joueurs</p>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Join Private Room */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setShowModeSelect(false);
+                  setShowPrivateModal(true);
+                }}
+                className="w-full p-5 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border-2 border-blue-500/50 rounded-2xl text-left hover:border-blue-400 transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <span className="text-4xl">🔑</span>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Rejoindre un salon</h3>
+                    <p className="text-gray-400 text-sm">Entre le code de ton ami</p>
+                    <p className="text-blue-400 text-xs mt-1">Code à 6 caractères</p>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+
+            <button
+              onClick={() => setShowModeSelect(false)}
+              className="w-full mt-4 py-2 text-gray-400 hover:text-white transition-colors"
+            >
+              Annuler
+            </button>
+          </motion.div>
         </motion.div>
-      </div>
+      )}
+
+      {/* Join Private Room Modal */}
+      {showPrivateModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowPrivateModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.8, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            className="bg-gray-900 rounded-3xl p-8 border border-gray-700 max-w-md w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <h2 className="text-2xl font-black text-white text-center mb-2">Rejoindre un salon</h2>
+            <p className="text-gray-400 text-center text-sm mb-6">Entre le code fourni par ton ami</p>
+            
+            <input
+              type="text"
+              value={roomInput}
+              onChange={(e) => setRoomInput(e.target.value.toUpperCase().slice(0, 6))}
+              placeholder="ABC123"
+              className="w-full px-4 py-4 bg-gray-800 border-2 border-gray-600 rounded-xl text-white text-center text-2xl font-mono tracking-widest placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-all"
+              maxLength={6}
+            />
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowPrivateModal(false)}
+                className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl text-gray-300 font-medium transition-all"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleJoinPrivate}
+                disabled={roomInput.length < 4}
+                className={`flex-1 py-3 rounded-xl font-bold transition-all ${
+                  roomInput.length >= 4
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white shadow-lg'
+                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Rejoindre
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }
