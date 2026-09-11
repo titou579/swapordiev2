@@ -9,88 +9,58 @@ export default function LobbyPage() {
   const gameMode = useGameStore(s => s.gameMode);
   const roomCode = useGameStore(s => s.roomCode);
   const lobbyPlayers = useGameStore(s => s.lobbyPlayers);
-  const lobbyCountdown = useGameStore(s => s.lobbyCountdown);
-  const lobbyStatus = useGameStore(s => s.lobbyStatus);
   const [copied, setCopied] = useState(false);
 
   const mapData = selectedMap ? getMapById(selectedMap) : null;
   
-  // Refs pour éviter les problèmes de closure
   const joinIntervalRef = useRef<number | null>(null);
-  const countdownIntervalRef = useRef<number | null>(null);
-  const lobbyCountdownRef = useRef(lobbyCountdown);
   const lobbyPlayersRef = useRef(lobbyPlayers);
   
-  // Keep refs in sync
+  // Keep ref in sync
   useEffect(() => {
-    lobbyCountdownRef.current = lobbyCountdown;
     lobbyPlayersRef.current = lobbyPlayers;
-  }, [lobbyCountdown, lobbyPlayers]);
+  }, [lobbyPlayers]);
 
-  // Unified lobby logic
+  // Auto-start when enough players
   useEffect(() => {
-    // Clean up all intervals on unmount or status change
-    if (joinIntervalRef.current) {
-      clearInterval(joinIntervalRef.current);
-      joinIntervalRef.current = null;
-    }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-
-    if (lobbyStatus === 'waiting') {
-      // Start adding players
-      joinIntervalRef.current = window.setInterval(() => {
-        // Use ref to get current value without stale closure
-        const currentPlayers = lobbyPlayersRef.current;
-        
-        // Stop if max players
-        if (currentPlayers.length >= 9) {
-          if (joinIntervalRef.current) {
-            clearInterval(joinIntervalRef.current);
-            joinIntervalRef.current = null;
-          }
-          return;
-        }
-        
-        // 60% chance to add a player
-        if (Math.random() < 0.6) {
-          actions.addLobbyPlayer();
-        }
+    if (lobbyPlayers.length >= 4) {
+      // Small delay to show the lobby
+      const timeout = setTimeout(() => {
+        actions.startGameFromLobby();
       }, 2000);
+      return () => clearTimeout(timeout);
     }
+  }, [lobbyPlayers.length]);
 
-    if (lobbyStatus === 'countdown') {
-      // Start countdown
-      countdownIntervalRef.current = window.setInterval(() => {
-        // Use ref to get current value without stale closure
-        const currentCountdown = lobbyCountdownRef.current;
-        
-        if (currentCountdown <= 1) {
-          if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-          }
-          actions.startGameFromLobby();
-        } else {
-          actions.updateLobbyCountdown(-1);
+  // Simulate players joining
+  useEffect(() => {
+    // Start adding players
+    joinIntervalRef.current = window.setInterval(() => {
+      const currentPlayers = lobbyPlayersRef.current;
+      
+      // Stop if max players
+      if (currentPlayers.length >= 9) {
+        if (joinIntervalRef.current) {
+          clearInterval(joinIntervalRef.current);
+          joinIntervalRef.current = null;
         }
-      }, 1000);
-    }
+        return;
+      }
+      
+      // 70% chance to add a player
+      if (Math.random() < 0.7) {
+        actions.addLobbyPlayer();
+      }
+    }, 1500);
 
-    // Cleanup on unmount
+    // Cleanup
     return () => {
       if (joinIntervalRef.current) {
         clearInterval(joinIntervalRef.current);
         joinIntervalRef.current = null;
       }
-      if (countdownIntervalRef.current) {
-        clearInterval(countdownIntervalRef.current);
-        countdownIntervalRef.current = null;
-      }
     };
-  }, [lobbyStatus]); // Only depend on lobbyStatus
+  }, []);
 
   const handleCopyCode = () => {
     if (roomCode) {
@@ -100,31 +70,11 @@ export default function LobbyPage() {
     }
   };
 
-  const handleStart = () => {
-    if (lobbyPlayers.length >= 2) {
-      // Stop player joining immediately
-      if (joinIntervalRef.current) {
-        clearInterval(joinIntervalRef.current);
-        joinIntervalRef.current = null;
-      }
-      // Reset countdown to 10
-      actions.setLobbyCountdown(10);
-      // Start countdown
-      actions.setLobbyStatus('countdown');
-    }
-  };
-
   const handleLeave = () => {
-    // Clean up intervals
     if (joinIntervalRef.current) {
       clearInterval(joinIntervalRef.current);
       joinIntervalRef.current = null;
     }
-    if (countdownIntervalRef.current) {
-      clearInterval(countdownIntervalRef.current);
-      countdownIntervalRef.current = null;
-    }
-    actions.setLobbyStatus('waiting');
     actions.setPage('menu');
   };
 
@@ -268,49 +218,37 @@ export default function LobbyPage() {
               </div>
             </div>
 
-            {/* Status & Actions */}
+            {/* Status */}
             <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              {lobbyStatus === 'waiting' && (
-                <>
-                  <div className="text-center mb-3">
+              <div className="text-center">
+                {lobbyPlayers.length < 4 ? (
+                  <motion.div
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <p className="text-gray-400 text-sm">En attente de joueurs...</p>
+                    <p className="text-gray-500 text-xs mt-1">La partie démarre avec 4 joueurs minimum</p>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <p className="text-green-400 text-sm font-bold">✓ Assez de joueurs !</p>
+                    <p className="text-gray-400 text-xs mt-1">La partie démarre dans 2 secondes...</p>
                     <motion.div
-                      animate={{ scale: [1, 1.02, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
+                      className="mt-2 h-1 bg-gray-700 rounded-full overflow-hidden"
                     >
-                      {lobbyPlayers.length < 2 ? (
-                        <p className="text-gray-400 text-sm">En attente de joueurs...</p>
-                      ) : (
-                        <p className="text-green-400 text-sm">Assez de joueurs ! Prêt à lancer ?</p>
-                      )}
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
+                        initial={{ width: '0%' }}
+                        animate={{ width: '100%' }}
+                        transition={{ duration: 2, ease: 'linear' }}
+                      />
                     </motion.div>
-                  </div>
-                  <button
-                    onClick={handleStart}
-                    disabled={lobbyPlayers.length < 2}
-                    className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-                      lobbyPlayers.length >= 2
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white shadow-lg shadow-green-500/25'
-                        : 'bg-white/5 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    {lobbyPlayers.length >= 2 ? '🚀 Lancer la partie' : '⏳ En attente...'}
-                  </button>
-                </>
-              )}
-
-              {lobbyStatus === 'countdown' && (
-                <div className="text-center">
-                  <p className="text-gray-400 text-xs mb-2">La partie commence dans</p>
-                  <motion.p
-                    className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    {lobbyCountdown}
-                  </motion.p>
-                  <p className="text-gray-500 text-xs mt-2">Préparez-vous !</p>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>
