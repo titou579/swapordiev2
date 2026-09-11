@@ -13,6 +13,12 @@ export interface Player {
   gems: number;
   tokens: number;
   inventory: InventoryItem[];
+  resources: {
+    wood: number;
+    stone: number;
+    gold: number;
+    gem: number;
+  };
   skin: string;
   kills: number;
   deaths: number;
@@ -48,6 +54,23 @@ export interface Trap {
   ownerId: string;
   isActive: boolean;
   triggered: boolean;
+}
+
+export interface CraftRecipe {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  result: {
+    type: 'trap' | 'weapon' | 'consumable';
+    name: string;
+    damage?: number;
+    effect?: string;
+  };
+  ingredients: {
+    type: 'wood' | 'stone' | 'gold' | 'gem';
+    amount: number;
+  }[];
 }
 
 export interface Resource {
@@ -96,6 +119,7 @@ interface GameState {
   roundNumber: number;
   killFeed: { killer: string; victim: string; method: string; time: number }[];
   shopItems: ShopItem[];
+  craftRecipes: CraftRecipe[];
 }
 
 const BOT_NAMES = ['ShadowHunter', 'NightBlade', 'PhoenixRise', 'StormBreaker', 'DarkMage', 'IceQueen', 'FireLord', 'ThunderGod', 'VoidWalker', 'StarDust'];
@@ -157,6 +181,99 @@ const generateResources = (mapId: string): Resource[] => {
   return resources;
 };
 
+const CRAFT_RECIPES: CraftRecipe[] = [
+  {
+    id: 'craft-spike-trap',
+    name: 'Piège à Pointes',
+    description: 'Inflige 25 dégâts',
+    icon: '⚔️',
+    result: {
+      type: 'trap',
+      name: 'Piège à Pointes',
+      damage: 25,
+    },
+    ingredients: [
+      { type: 'wood', amount: 3 },
+      { type: 'stone', amount: 2 },
+    ],
+  },
+  {
+    id: 'craft-poison-trap',
+    name: 'Piège Toxique',
+    description: 'Empoisonne pendant 5s',
+    icon: '☠️',
+    result: {
+      type: 'trap',
+      name: 'Piège Toxique',
+      damage: 15,
+      effect: 'poison',
+    },
+    ingredients: [
+      { type: 'wood', amount: 2 },
+      { type: 'gem', amount: 1 },
+    ],
+  },
+  {
+    id: 'craft-explosive-trap',
+    name: 'Piège Explosif',
+    description: 'Explosion de 40 dégâts',
+    icon: '💥',
+    result: {
+      type: 'trap',
+      name: 'Piège Explosif',
+      damage: 40,
+    },
+    ingredients: [
+      { type: 'stone', amount: 4 },
+      { type: 'gold', amount: 2 },
+    ],
+  },
+  {
+    id: 'craft-sword',
+    name: 'Épée en Pierre',
+    description: '+15 dégâts au combat',
+    icon: '🗡️',
+    result: {
+      type: 'weapon',
+      name: 'Épée en Pierre',
+      damage: 15,
+    },
+    ingredients: [
+      { type: 'wood', amount: 2 },
+      { type: 'stone', amount: 3 },
+    ],
+  },
+  {
+    id: 'craft-bow',
+    name: 'Arc Simple',
+    description: 'Tir à distance',
+    icon: '🏹',
+    result: {
+      type: 'weapon',
+      name: 'Arc Simple',
+      damage: 12,
+    },
+    ingredients: [
+      { type: 'wood', amount: 4 },
+    ],
+  },
+  {
+    id: 'craft-healing',
+    name: 'Potion de Soin',
+    description: 'Restaure 30 PV',
+    icon: '🧪',
+    result: {
+      type: 'consumable',
+      name: 'Potion de Soin',
+      effect: 'heal',
+    },
+    ingredients: [
+      { type: 'gem', amount: 2 },
+      { type: 'gold', amount: 1 },
+    ],
+  },
+];
+
 const initialState: GameState = {
   isAuthenticated: false,
   user: null,
@@ -177,6 +294,7 @@ const initialState: GameState = {
   roundNumber: 1,
   killFeed: [],
   shopItems: generateShopItems(),
+  craftRecipes: CRAFT_RECIPES,
 };
 
 type Listener = () => void;
@@ -392,6 +510,12 @@ export const actions = {
         { id: 'sword-1', name: 'Épée Basique', type: 'weapon', quantity: 1, damage: 10 },
         { id: 'trap-basic', name: 'Piège Simple', type: 'trap', quantity: 3, damage: 20 },
       ] : [],
+      resources: {
+        wood: 0,
+        stone: 0,
+        gold: 0,
+        gem: 0,
+      },
       skin: lp.avatar,
       kills: 0,
       deaths: 0,
@@ -421,6 +545,12 @@ export const actions = {
           gems: Math.floor(Math.random() * 30),
           tokens: 0,
           inventory: [],
+          resources: {
+            wood: 0,
+            stone: 0,
+            gold: 0,
+            gem: 0,
+          },
           skin: BOT_AVATARS[idx % BOT_AVATARS.length],
           kills: 0,
           deaths: 0,
@@ -448,26 +578,30 @@ export const actions = {
     });
   },
 
-  endGame() {
-    // Award XP based on performance
-    const localPlayer = state.localPlayer;
-    if (localPlayer) {
-      // Base XP for playing
-      battlePassActions.addXP(25);
-      
-      // Bonus XP for kills
-      if (localPlayer.kills > 0) {
-        battlePassActions.addXP(localPlayer.kills * 10);
+  endGame(isQuit: boolean = false) {
+    // Award XP based on performance (only if not quitting)
+    if (!isQuit) {
+      const localPlayer = state.localPlayer;
+      if (localPlayer) {
+        // Base XP for playing
+        battlePassActions.addXP(25);
+        
+        // Bonus XP for kills
+        if (localPlayer.kills > 0) {
+          battlePassActions.addXP(localPlayer.kills * 10);
+        }
+        
+        // Bonus XP for winning
+        if (localPlayer.isAlive) {
+          battlePassActions.addXP(100);
+          battlePassActions.updateQuestProgress('weekly-2', 1); // Survivant
+        }
       }
-      
-      // Bonus XP for winning
-      if (localPlayer.isAlive) {
-        battlePassActions.addXP(100);
-        battlePassActions.updateQuestProgress('weekly-2', 1); // Survivant
-      }
+      setState({ gameStatus: 'ended', currentPage: 'menu' });
+    } else {
+      // Just quit, go directly to menu
+      setState({ gameStatus: 'lobby', currentPage: 'menu' });
     }
-
-    setState({ gameStatus: 'ended', currentPage: 'menu' });
   },
 
   triggerSwap() {
@@ -527,10 +661,18 @@ export const actions = {
     const newResources = state.resources.map(r => r.id === resourceId ? { ...r, collected: true } : r);
     const newLocal = { ...state.localPlayer };
 
-    if (resource.type === 'gold') newLocal.gold += resource.amount;
-    else if (resource.type === 'gem') newLocal.gems += Math.floor(resource.amount / 10);
-    else if (resource.type === 'wood') newLocal.gold += Math.floor(resource.amount / 2);
-    else if (resource.type === 'stone') newLocal.gold += Math.floor(resource.amount / 3);
+    // Add to player resources
+    if (resource.type === 'gold') {
+      newLocal.gold += resource.amount;
+      newLocal.resources.gold += resource.amount;
+    } else if (resource.type === 'gem') {
+      newLocal.gems += Math.floor(resource.amount / 10);
+      newLocal.resources.gem += Math.floor(resource.amount / 10);
+    } else if (resource.type === 'wood') {
+      newLocal.resources.wood += resource.amount;
+    } else if (resource.type === 'stone') {
+      newLocal.resources.stone += resource.amount;
+    }
 
     const newPlayers = state.players.map(p => p.id === 'local' ? newLocal : p);
     setState({ resources: newResources, localPlayer: newLocal, players: newPlayers });
@@ -612,5 +754,132 @@ export const actions = {
 
   resetGame() {
     setState({ ...initialState, isAuthenticated: true, user: state.user, isAdmin: state.isAdmin, currentPage: 'menu' });
+  },
+
+  // Craft actions
+  craftItem(recipeId: string) {
+    const recipe = state.craftRecipes.find(r => r.id === recipeId);
+    if (!recipe || !state.localPlayer) return false;
+
+    // Check if player has enough resources
+    const playerResources = state.localPlayer.resources;
+    for (const ingredient of recipe.ingredients) {
+      if (playerResources[ingredient.type] < ingredient.amount) {
+        return false;
+      }
+    }
+
+    // Deduct resources
+    const newResources = { ...playerResources };
+    for (const ingredient of recipe.ingredients) {
+      newResources[ingredient.type] -= ingredient.amount;
+    }
+
+    // Add item to inventory
+    const newItem: InventoryItem = {
+      id: `crafted-${Date.now()}`,
+      name: recipe.result.name,
+      type: recipe.result.type,
+      quantity: 1,
+      damage: recipe.result.damage,
+      effect: recipe.result.effect,
+    };
+
+    const newInventory = [...state.localPlayer.inventory, newItem];
+    const newLocalPlayer = {
+      ...state.localPlayer,
+      resources: newResources,
+      inventory: newInventory,
+    };
+
+    setState({
+      localPlayer: newLocalPlayer,
+      players: state.players.map(p => p.id === 'local' ? newLocalPlayer : p),
+    });
+
+    return true;
+  },
+
+  // Attack action
+  attackPlayer(targetId: string) {
+    if (!state.localPlayer) return;
+
+    const target = state.players.find(p => p.id === targetId);
+    if (!target || !target.isAlive) return;
+
+    // Check distance
+    const dx = state.localPlayer.position[0] - target.position[0];
+    const dz = state.localPlayer.position[2] - target.position[2];
+    const distance = Math.sqrt(dx * dx + dz * dz);
+
+    if (distance > 3) return; // Too far
+
+    // Find best weapon
+    const weapons = state.localPlayer.inventory.filter(i => i.type === 'weapon');
+    const damage = weapons.length > 0 ? Math.max(...weapons.map(w => w.damage || 10)) : 5;
+
+    // Apply damage
+    const newHealth = Math.max(0, target.health - damage);
+    const newPlayers = state.players.map(p => {
+      if (p.id === targetId) {
+        return {
+          ...p,
+          health: newHealth,
+          isAlive: newHealth > 0,
+          deaths: newHealth <= 0 ? p.deaths + 1 : p.deaths,
+        };
+      }
+      if (p.id === 'local') {
+        return { ...p, kills: newHealth <= 0 ? p.kills + 1 : p.kills };
+      }
+      return p;
+    });
+
+    // Add to kill feed if killed
+    if (newHealth <= 0) {
+      setState({
+        killFeed: [
+          { killer: state.localPlayer.name, victim: target.name, method: 'Combat', time: Date.now() },
+          ...state.killFeed,
+        ].slice(0, 10),
+      });
+    }
+
+    setState({
+      players: newPlayers,
+      localPlayer: newPlayers.find(p => p.id === 'local') || null,
+    });
+  },
+
+  // Use consumable
+  useConsumable(itemId: string) {
+    if (!state.localPlayer) return;
+
+    const item = state.localPlayer.inventory.find(i => i.id === itemId && i.type === 'consumable');
+    if (!item) return;
+
+    let newLocalPlayer = { ...state.localPlayer };
+
+    if (item.effect === 'heal') {
+      newLocalPlayer.health = Math.min(newLocalPlayer.maxHealth, newLocalPlayer.health + 30);
+    }
+
+    // Remove or decrease quantity
+    const newInventory = newLocalPlayer.inventory.map(i => {
+      if (i.id === itemId) {
+        if (i.quantity > 1) {
+          return { ...i, quantity: i.quantity - 1 };
+        }
+        return null;
+      }
+      return i;
+    }).filter(i => i !== null) as InventoryItem[];
+
+    newLocalPlayer.inventory = newInventory;
+
+    setState({
+      localPlayer: newLocalPlayer,
+      players: state.players.map(p => p.id === 'local' ? newLocalPlayer : p),
+    });
   },
 };

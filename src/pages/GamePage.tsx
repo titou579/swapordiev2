@@ -6,6 +6,7 @@ import { useGameStore, actions, Player, Resource, Trap as TrapType } from '../st
 import { getMapById } from '../data/maps';
 import Character from '../components/Character';
 import MapRenderer from '../components/MapRenderer';
+import CraftMenu from '../components/CraftMenu';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Ground Component
@@ -290,18 +291,36 @@ function GameScene() {
       {players.map((player: Player) => (
         player.isAlive && (
           <group key={player.id}>
-            <Character
-              position={player.position}
-              skinColor={player.skinColor || '#ffdbac'}
-              outfitColor={player.outfitColor || (player.id === 'local' ? '#00cc66' : '#e74c3c')}
-              hairColor={player.hairColor || '#3d2314'}
-              name={player.name}
-              isLocal={player.id === 'local'}
-              health={player.health}
-              maxHealth={player.maxHealth}
-              skin={player.skin}
-              isMoving={player.id === 'local' ? true : player.isBot}
-            />
+            <group
+              onClick={(e) => {
+                e.stopPropagation();
+                if (player.id !== 'local') {
+                  actions.attackPlayer(player.id);
+                }
+              }}
+              onPointerOver={(e) => {
+                e.stopPropagation();
+                if (player.id !== 'local') {
+                  document.body.style.cursor = 'crosshair';
+                }
+              }}
+              onPointerOut={() => {
+                document.body.style.cursor = 'default';
+              }}
+            >
+              <Character
+                position={player.position}
+                skinColor={player.skinColor || '#ffdbac'}
+                outfitColor={player.outfitColor || (player.id === 'local' ? '#00cc66' : '#e74c3c')}
+                hairColor={player.hairColor || '#3d2314'}
+                name={player.name}
+                isLocal={player.id === 'local'}
+                health={player.health}
+                maxHealth={player.maxHealth}
+                skin={player.skin}
+                isMoving={player.id === 'local' ? true : player.isBot}
+              />
+            </group>
             {/* Name tag using Text */}
             <Text
               position={[player.position[0], 2.5, player.position[2]]}
@@ -383,7 +402,7 @@ function MobileControls() {
 }
 
 // HUD Component
-function GameHUD() {
+function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft: (show: boolean) => void }) {
   const localPlayer = useGameStore(s => s.localPlayer);
   const swapTimer = useGameStore(s => s.swapTimer);
   const gameStatus = useGameStore(s => s.gameStatus);
@@ -610,7 +629,13 @@ function GameHUD() {
             🎒 Sac
           </button>
           <button
-            onClick={() => actions.endGame()}
+            onClick={() => setShowCraft(!showCraft)}
+            className="px-4 py-2.5 bg-orange-800/80 hover:bg-orange-700/80 border border-orange-600/50 rounded-xl text-orange-300 font-bold text-sm transition-all"
+          >
+            🔨 Craft
+          </button>
+          <button
+            onClick={() => actions.endGame(true)}
             className="px-4 py-2.5 bg-red-900/40 hover:bg-red-800/50 border border-red-700/40 rounded-xl text-red-300 font-bold text-sm transition-all"
           >
             🚪 Quitter
@@ -708,6 +733,7 @@ export default function GamePage() {
   const localPlayer = useGameStore(s => s.localPlayer);
   const selectedMap = useGameStore(s => s.selectedMap);
   const mapData = selectedMap ? getMapById(selectedMap) : getMapById('neon-city');
+  const [showCraft, setShowCraft] = useState(false);
 
   useEffect(() => {
     if (localPlayer && !localPlayer.isAlive && gameStatus === 'playing') {
@@ -729,7 +755,10 @@ export default function GamePage() {
       >
         <GameScene />
       </Canvas>
-      <GameHUD />
+      <GameHUD showCraft={showCraft} setShowCraft={setShowCraft} />
+
+      {/* Craft Menu */}
+      <CraftMenu isOpen={showCraft} onClose={() => setShowCraft(false)} />
 
       {/* Death overlay */}
       <AnimatePresence>
