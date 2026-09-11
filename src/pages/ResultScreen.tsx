@@ -16,15 +16,19 @@ export default function ResultScreen() {
   const placement = sortedPlayers.findIndex(p => p.id === 'local') + 1;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0015] via-[#1a0033] to-[#0a0015] relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0">
         {isWinner && (
           <>
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-500/15 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl animate-pulse" />
           </>
         )}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+          backgroundSize: '50px 50px'
+        }} />
       </div>
 
       <div className="relative z-10 w-full max-w-lg mx-4">
@@ -139,7 +143,7 @@ export default function ResultScreen() {
           </button>
           <button
             onClick={() => actions.setPage('menu')}
-            className="flex-1 py-4 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-2xl text-gray-300 font-bold text-lg transition-all"
+            className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-gray-300 font-bold text-lg transition-all"
           >
             🏠 Menu
           </button>

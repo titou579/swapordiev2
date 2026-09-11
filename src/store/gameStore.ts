@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { MAPS, getMapById } from '../data/maps';
+import { userStorage, UserAccount } from '../utils/userStorage';
 
 export interface Player {
   id: string;
@@ -70,7 +71,7 @@ export interface ShopItem {
 
 interface GameState {
   isAuthenticated: boolean;
-  user: { id: string; name: string; email: string; avatar: string; provider: string } | null;
+  user: UserAccount | null;
   isAdmin: boolean;
   currentPage: 'login' | 'menu' | 'mapSelect' | 'lobby' | 'game' | 'shop' | 'admin' | 'profile';
   
@@ -197,28 +198,98 @@ export function useGameStore<T>(selector: (s: GameState) => T): T {
 }
 
 export const actions = {
-  login(provider: string, userData: { name?: string; email?: string; avatar?: string }) {
+  // Initialize user from localStorage
+  initUser() {
+    const user = userStorage.getCurrentUser();
+    if (user) {
+      setState({
+        isAuthenticated: true,
+        user,
+        isAdmin: user.email === 'admin@swapordie.com',
+        currentPage: 'menu',
+      });
+    }
+  },
+
+  // Register new account
+  register(email: string, password: string, username: string) {
+    try {
+      const user = userStorage.createUser(email, password, username);
+      setState({
+        isAuthenticated: true,
+        user,
+        isAdmin: user.email === 'admin@swapordie.com',
+        currentPage: 'menu',
+      });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  },
+
+  // Login with email/password
+  loginWithEmail(email: string, password: string) {
+    const user = userStorage.login(email, password);
+    if (user) {
+      setState({
+        isAuthenticated: true,
+        user,
+        isAdmin: user.email === 'admin@swapordie.com',
+        currentPage: 'menu',
+      });
+      return { success: true };
+    }
+    return { success: false, error: 'Email ou mot de passe incorrect' };
+  },
+
+  // Login with OAuth (simulated)
+  loginWithOAuth(provider: 'google' | 'apple' | 'discord') {
+    const emails: Record<string, string> = {
+      google: 'user@gmail.com',
+      apple: 'user@icloud.com',
+      discord: 'user@discord.com',
+    };
+    const usernames: Record<string, string> = {
+      google: 'GooglePlayer',
+      apple: 'ApplePlayer',
+      discord: 'DiscordGamer',
+    };
+    
+    const user = userStorage.loginWithOAuth(provider, emails[provider], usernames[provider]);
     setState({
       isAuthenticated: true,
-      user: {
-        id: `user-${Date.now()}`,
-        name: userData.name || 'Joueur',
-        email: userData.email || '',
-        avatar: userData.avatar || '🎮',
-        provider,
-      },
-      isAdmin: userData.email === 'admin@swapordie.com',
+      user,
+      isAdmin: user.email === 'admin@swapordie.com',
       currentPage: 'menu',
     });
   },
 
   logout() {
+    userStorage.logout();
     setState({
       isAuthenticated: false,
       user: null,
       currentPage: 'login',
       gameStatus: 'lobby',
     });
+  },
+
+  // Update username
+  updateUsername(newUsername: string) {
+    userStorage.updateUsername(newUsername);
+    const user = userStorage.getCurrentUser();
+    if (user) {
+      setState({ user });
+    }
+  },
+
+  // Update avatar
+  updateAvatar(newAvatar: string) {
+    userStorage.updateAvatar(newAvatar);
+    const user = userStorage.getCurrentUser();
+    if (user) {
+      setState({ user });
+    }
   },
 
   setPage(page: GameState['currentPage']) {
@@ -264,7 +335,7 @@ export const actions = {
   startLobby(mode: 'public' | 'private') {
     const localPlayer: LobbyPlayer = {
       id: 'local',
-      name: state.user?.name || 'Joueur',
+      name: state.user?.username || 'Joueur',
       avatar: state.user?.avatar || '🎮',
       isBot: false,
       isReady: true,
