@@ -6,6 +6,7 @@ import { useGameStore, actions, Player, Resource, Trap as TrapType } from '../st
 import { getMapById } from '../data/maps';
 import Character from '../components/Character';
 import MapRenderer from '../components/MapRenderer';
+import CraftMenu from '../components/CraftMenu';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Ground Component
@@ -14,9 +15,15 @@ function Ground({ color }: { color: string }) {
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
         <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial color={color} metalness={0.4} roughness={0.6} />
+        <meshStandardMaterial 
+          color={color} 
+          metalness={0.3} 
+          roughness={0.7}
+          emissive={color}
+          emissiveIntensity={0.05}
+        />
       </mesh>
-      <gridHelper args={[60, 30, '#3b0764', '#1e0538']} position={[0, 0.01, 0]} />
+      <gridHelper args={[60, 30, '#6b21a8', '#3b0764']} position={[0, 0.02, 0]} />
     </group>
   );
 }
@@ -34,11 +41,19 @@ function Boundaries() {
         <group key={i}>
           <mesh position={wall.pos}>
             <boxGeometry args={wall.size} />
-            <meshStandardMaterial color="#2e1065" transparent opacity={0.4} metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial 
+              color="#4c1d95" 
+              transparent 
+              opacity={0.6} 
+              metalness={0.7} 
+              roughness={0.3}
+              emissive="#7c3aed"
+              emissiveIntensity={0.3}
+            />
           </mesh>
           <mesh position={[wall.pos[0], 0.1, wall.pos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[wall.size[0] || wall.size[2], 0.5]} />
-            <meshBasicMaterial color="#7c3aed" transparent opacity={0.5} />
+            <planeGeometry args={[wall.size[0] || wall.size[2], 1]} />
+            <meshBasicMaterial color="#a855f7" transparent opacity={0.5} />
           </mesh>
         </group>
       ))}
@@ -195,10 +210,15 @@ function CameraController() {
     if (localPlayer) {
       const targetX = localPlayer.position[0];
       const targetZ = localPlayer.position[2];
-      camera.position.x += (targetX - camera.position.x) * 0.04;
-      camera.position.z += (targetZ + 14 - camera.position.z) * 0.04;
-      camera.position.y += (12 - camera.position.y) * 0.02;
-      camera.lookAt(targetX, 0, targetZ);
+      
+      // Vue 3ème personne rapprochée style Fortnite
+      // Caméra à 5 unités derrière et 3.5 unités au-dessus du joueur
+      camera.position.x += (targetX - camera.position.x) * 0.08;
+      camera.position.z += (targetZ + 5 - camera.position.z) * 0.08;
+      camera.position.y += (3.5 - camera.position.y) * 0.08;
+      
+      // Regarder légèrement au-dessus du joueur (au niveau de la tête)
+      camera.lookAt(targetX, 1.5, targetZ);
     }
   });
 
@@ -238,10 +258,11 @@ function GameScene() {
 
   return (
     <>
-      <ambientLight intensity={mapData.theme.ambientLight} />
+      {/* Éclairage amélioré pour mieux voir les structures */}
+      <ambientLight intensity={Math.max(0.5, mapData.theme.ambientLight + 0.3)} />
       <directionalLight
         position={[15, 25, 10]}
-        intensity={0.8}
+        intensity={1.2}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-far={60}
@@ -250,8 +271,14 @@ function GameScene() {
         shadow-camera-top={30}
         shadow-camera-bottom={-30}
       />
-      <pointLight position={[0, 8, 0]} intensity={0.8} color="#7c3aed" distance={30} />
-      <hemisphereLight args={[mapData.theme.skyColor, mapData.theme.groundColor, 0.3]} />
+      <directionalLight
+        position={[-10, 15, -10]}
+        intensity={0.4}
+        color="#ffffff"
+      />
+      <pointLight position={[0, 8, 0]} intensity={1} color="#7c3aed" distance={40} />
+      <pointLight position={[0, 2, 0]} intensity={0.5} color="#ffffff" distance={20} />
+      <hemisphereLight args={[mapData.theme.skyColor, mapData.theme.groundColor, 0.5]} />
 
       <fog attach="fog" args={[mapData.theme.fogColor, mapData.theme.fogNear, mapData.theme.fogFar]} />
 
@@ -264,18 +291,36 @@ function GameScene() {
       {players.map((player: Player) => (
         player.isAlive && (
           <group key={player.id}>
-            <Character
-              position={player.position}
-              skinColor={player.skinColor || '#ffdbac'}
-              outfitColor={player.outfitColor || (player.id === 'local' ? '#00cc66' : '#e74c3c')}
-              hairColor={player.hairColor || '#3d2314'}
-              name={player.name}
-              isLocal={player.id === 'local'}
-              health={player.health}
-              maxHealth={player.maxHealth}
-              skin={player.skin}
-              isMoving={player.id === 'local' ? true : player.isBot}
-            />
+            <group
+              onClick={(e) => {
+                e.stopPropagation();
+                if (player.id !== 'local') {
+                  actions.attackPlayer(player.id);
+                }
+              }}
+              onPointerOver={(e) => {
+                e.stopPropagation();
+                if (player.id !== 'local') {
+                  document.body.style.cursor = 'crosshair';
+                }
+              }}
+              onPointerOut={() => {
+                document.body.style.cursor = 'default';
+              }}
+            >
+              <Character
+                position={player.position}
+                skinColor={player.skinColor || '#ffdbac'}
+                outfitColor={player.outfitColor || (player.id === 'local' ? '#00cc66' : '#e74c3c')}
+                hairColor={player.hairColor || '#3d2314'}
+                name={player.name}
+                isLocal={player.id === 'local'}
+                health={player.health}
+                maxHealth={player.maxHealth}
+                skin={player.skin}
+                isMoving={player.id === 'local' ? true : player.isBot}
+              />
+            </group>
             {/* Name tag using Text */}
             <Text
               position={[player.position[0], 2.5, player.position[2]]}
@@ -357,7 +402,7 @@ function MobileControls() {
 }
 
 // HUD Component
-function GameHUD() {
+function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft: (show: boolean) => void }) {
   const localPlayer = useGameStore(s => s.localPlayer);
   const swapTimer = useGameStore(s => s.swapTimer);
   const gameStatus = useGameStore(s => s.gameStatus);
@@ -584,7 +629,13 @@ function GameHUD() {
             🎒 Sac
           </button>
           <button
-            onClick={() => actions.endGame()}
+            onClick={() => setShowCraft(!showCraft)}
+            className="px-4 py-2.5 bg-orange-800/80 hover:bg-orange-700/80 border border-orange-600/50 rounded-xl text-orange-300 font-bold text-sm transition-all"
+          >
+            🔨 Craft
+          </button>
+          <button
+            onClick={() => actions.endGame(true)}
             className="px-4 py-2.5 bg-red-900/40 hover:bg-red-800/50 border border-red-700/40 rounded-xl text-red-300 font-bold text-sm transition-all"
           >
             🚪 Quitter
@@ -682,6 +733,7 @@ export default function GamePage() {
   const localPlayer = useGameStore(s => s.localPlayer);
   const selectedMap = useGameStore(s => s.selectedMap);
   const mapData = selectedMap ? getMapById(selectedMap) : getMapById('neon-city');
+  const [showCraft, setShowCraft] = useState(false);
 
   useEffect(() => {
     if (localPlayer && !localPlayer.isAlive && gameStatus === 'playing') {
@@ -693,7 +745,7 @@ export default function GamePage() {
     <div className="w-full h-screen relative bg-black overflow-hidden">
       <Canvas
         shadows
-        camera={{ position: [0, 15, 15], fov: 55 }}
+        camera={{ position: [0, 4, 6], fov: 70 }}
         gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => {
           gl.setClearColor(mapData?.theme.fogColor || '#050010');
@@ -703,7 +755,10 @@ export default function GamePage() {
       >
         <GameScene />
       </Canvas>
-      <GameHUD />
+      <GameHUD showCraft={showCraft} setShowCraft={setShowCraft} />
+
+      {/* Craft Menu */}
+      <CraftMenu isOpen={showCraft} onClose={() => setShowCraft(false)} />
 
       {/* Death overlay */}
       <AnimatePresence>

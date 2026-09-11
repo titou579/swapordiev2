@@ -22,8 +22,10 @@ function StructureMesh({ structure }: { structure: MapStructure }) {
           <boxGeometry args={structure.size || [2, 2, 2]} />
           <meshStandardMaterial
             color={structure.color || '#666'}
-            metalness={0.4}
-            roughness={0.6}
+            metalness={0.3}
+            roughness={0.7}
+            emissive={structure.color || '#333'}
+            emissiveIntensity={0.15}
           />
         </mesh>
       );
@@ -40,8 +42,10 @@ function StructureMesh({ structure }: { structure: MapStructure }) {
             ]} />
             <meshStandardMaterial
               color={structure.color || '#888'}
-              metalness={0.5}
-              roughness={0.5}
+              metalness={0.4}
+              roughness={0.6}
+              emissive={structure.color || '#444'}
+              emissiveIntensity={0.15}
             />
           </mesh>
         </group>
@@ -60,7 +64,7 @@ function StructureMesh({ structure }: { structure: MapStructure }) {
             metalness={0.3}
             roughness={0.7}
             emissive={structure.color || '#000'}
-            emissiveIntensity={0.1}
+            emissiveIntensity={0.2}
           />
         </mesh>
       );
@@ -92,10 +96,10 @@ function StructureMesh({ structure }: { structure: MapStructure }) {
           <boxGeometry args={structure.size || [3, 0.3, 3]} />
           <meshStandardMaterial
             color={structure.color || '#444'}
-            metalness={0.6}
-            roughness={0.4}
+            metalness={0.5}
+            roughness={0.5}
             emissive={structure.color || '#000'}
-            emissiveIntensity={0.15}
+            emissiveIntensity={0.25}
           />
         </mesh>
       );
@@ -130,8 +134,10 @@ function StructureMesh({ structure }: { structure: MapStructure }) {
           <dodecahedronGeometry args={[(structure.size?.[0] || 2) * 0.5]} />
           <meshStandardMaterial
             color={structure.color || '#666'}
-            roughness={0.9}
-            metalness={0.1}
+            roughness={0.8}
+            metalness={0.2}
+            emissive={structure.color || '#333'}
+            emissiveIntensity={0.1}
           />
         </mesh>
       );
@@ -169,8 +175,10 @@ function StructureMesh({ structure }: { structure: MapStructure }) {
           <boxGeometry args={structure.size || [0.8, 0.8, 0.8]} />
           <meshStandardMaterial
             color={structure.color || '#8b6914'}
-            roughness={0.8}
-            metalness={0.2}
+            roughness={0.7}
+            metalness={0.3}
+            emissive={structure.color || '#8b6914'}
+            emissiveIntensity={0.15}
           />
         </mesh>
       );
