@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore, actions } from '../store/gameStore';
 import { getMapById } from '../data/maps';
+import { useState } from 'react';
 
 export default function LobbyPage() {
   const selectedMap = useGameStore(s => s.selectedMap);
@@ -13,48 +14,83 @@ export default function LobbyPage() {
   const [copied, setCopied] = useState(false);
 
   const mapData = selectedMap ? getMapById(selectedMap) : null;
-
-  // Simulate players joining
+  
+  // Refs pour éviter les problèmes de closure
+  const joinIntervalRef = useRef<number | null>(null);
+  const countdownIntervalRef = useRef<number | null>(null);
+  const lobbyCountdownRef = useRef(lobbyCountdown);
+  const lobbyPlayersRef = useRef(lobbyPlayers);
+  
+  // Keep refs in sync
   useEffect(() => {
-    if (lobbyStatus !== 'waiting') return;
-    
-    const interval = setInterval(() => {
-      const currentState = useGameStore(s => ({ 
-        players: s.lobbyPlayers, 
-        status: s.lobbyStatus 
-      }));
-      
-      // Stop if countdown started or max players reached
-      if (currentState.status !== 'waiting' || currentState.players.length >= 9) {
-        clearInterval(interval);
-        return;
-      }
-      
-      if (Math.random() > 0.5) {
-        actions.addLobbyPlayer();
-      }
-    }, 2500);
-    
-    return () => clearInterval(interval);
-  }, [lobbyStatus]);
+    lobbyCountdownRef.current = lobbyCountdown;
+    lobbyPlayersRef.current = lobbyPlayers;
+  }, [lobbyCountdown, lobbyPlayers]);
 
-  // Countdown when enough players
+  // Unified lobby logic
   useEffect(() => {
-    if (lobbyStatus !== 'countdown') return;
-    
-    // Stop adding players immediately
-    const interval = setInterval(() => {
-      const current = useGameStore(s => s.lobbyCountdown);
-      if (current <= 1) {
-        clearInterval(interval);
-        actions.startGameFromLobby();
-      } else {
-        actions.updateLobbyCountdown(-1);
+    // Clean up all intervals on unmount or status change
+    if (joinIntervalRef.current) {
+      clearInterval(joinIntervalRef.current);
+      joinIntervalRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    if (lobbyStatus === 'waiting') {
+      // Start adding players
+      joinIntervalRef.current = window.setInterval(() => {
+        // Use ref to get current value without stale closure
+        const currentPlayers = lobbyPlayersRef.current;
+        
+        // Stop if max players
+        if (currentPlayers.length >= 9) {
+          if (joinIntervalRef.current) {
+            clearInterval(joinIntervalRef.current);
+            joinIntervalRef.current = null;
+          }
+          return;
+        }
+        
+        // 60% chance to add a player
+        if (Math.random() < 0.6) {
+          actions.addLobbyPlayer();
+        }
+      }, 2000);
+    }
+
+    if (lobbyStatus === 'countdown') {
+      // Start countdown
+      countdownIntervalRef.current = window.setInterval(() => {
+        // Use ref to get current value without stale closure
+        const currentCountdown = lobbyCountdownRef.current;
+        
+        if (currentCountdown <= 1) {
+          if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+          }
+          actions.startGameFromLobby();
+        } else {
+          actions.updateLobbyCountdown(-1);
+        }
+      }, 1000);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (joinIntervalRef.current) {
+        clearInterval(joinIntervalRef.current);
+        joinIntervalRef.current = null;
       }
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [lobbyStatus]);
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+    };
+  }, [lobbyStatus]); // Only depend on lobbyStatus
 
   const handleCopyCode = () => {
     if (roomCode) {
@@ -66,8 +102,30 @@ export default function LobbyPage() {
 
   const handleStart = () => {
     if (lobbyPlayers.length >= 2) {
+      // Stop player joining immediately
+      if (joinIntervalRef.current) {
+        clearInterval(joinIntervalRef.current);
+        joinIntervalRef.current = null;
+      }
+      // Reset countdown to 10
+      actions.setLobbyCountdown(10);
+      // Start countdown
       actions.setLobbyStatus('countdown');
     }
+  };
+
+  const handleLeave = () => {
+    // Clean up intervals
+    if (joinIntervalRef.current) {
+      clearInterval(joinIntervalRef.current);
+      joinIntervalRef.current = null;
+    }
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+    actions.setLobbyStatus('waiting');
+    actions.setPage('menu');
   };
 
   return (
@@ -96,10 +154,7 @@ export default function LobbyPage() {
             </p>
           </div>
           <button
-            onClick={() => {
-              actions.setLobbyStatus('waiting');
-              actions.setPage('menu');
-            }}
+            onClick={handleLeave}
             className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-300 font-medium transition-all text-sm"
           >
             ← Quitter

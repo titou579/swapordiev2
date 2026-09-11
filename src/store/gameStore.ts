@@ -313,6 +313,10 @@ export const actions = {
     setState({ lobbyStatus: status });
   },
 
+  setLobbyCountdown(value: number) {
+    setState({ lobbyCountdown: value });
+  },
+
   updateLobbyCountdown(delta: number) {
     setState({ lobbyCountdown: Math.max(0, state.lobbyCountdown + delta) });
   },
