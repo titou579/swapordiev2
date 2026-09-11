@@ -1,4 +1,5 @@
-import { useState, useCallback, useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from 'react';
+import { MAPS, getMapById } from '../data/maps';
 
 export interface Player {
   id: string;
@@ -14,6 +15,18 @@ export interface Player {
   kills: number;
   deaths: number;
   isAlive: boolean;
+  isBot: boolean;
+  outfitColor?: string;
+  hairColor?: string;
+  skinColor?: string;
+}
+
+export interface LobbyPlayer {
+  id: string;
+  name: string;
+  avatar: string;
+  isBot: boolean;
+  isReady: boolean;
 }
 
 export interface InventoryItem {
@@ -59,7 +72,19 @@ interface GameState {
   isAuthenticated: boolean;
   user: { id: string; name: string; email: string; avatar: string; provider: string } | null;
   isAdmin: boolean;
-  currentPage: 'login' | 'menu' | 'game' | 'shop' | 'admin' | 'profile';
+  currentPage: 'login' | 'menu' | 'mapSelect' | 'lobby' | 'game' | 'shop' | 'admin' | 'profile';
+  
+  // Map & Mode
+  selectedMap: string | null;
+  gameMode: 'public' | 'private' | null;
+  roomCode: string | null;
+  
+  // Lobby
+  lobbyPlayers: LobbyPlayer[];
+  lobbyCountdown: number;
+  lobbyStatus: 'waiting' | 'countdown';
+  
+  // Game
   players: Player[];
   localPlayer: Player | null;
   traps: Trap[];
@@ -70,6 +95,21 @@ interface GameState {
   killFeed: { killer: string; victim: string; method: string; time: number }[];
   shopItems: ShopItem[];
 }
+
+const BOT_NAMES = ['ShadowHunter', 'NightBlade', 'PhoenixRise', 'StormBreaker', 'DarkMage', 'IceQueen', 'FireLord', 'ThunderGod', 'VoidWalker', 'StarDust'];
+const BOT_AVATARS = ['🔥', '❄️', '🌑', '⚡', '💀', '🦊', '🐉', '👑', '🌟', '🎭'];
+const BOT_OUTFITS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#e67e22', '#34495e', '#c0392b', '#16a085'];
+const BOT_HAIRS = ['#3d2314', '#1a1a1a', '#d4a574', '#8b0000', '#ffd700', '#ff69b4', '#4169e1', '#2f4f4f'];
+const BOT_SKINS = ['#ffdbac', '#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
+
+const generateRoomCode = (): string => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+};
 
 const generateShopItems = (): ShopItem[] => [
   { id: 'skin-fire', name: 'Flammes Infernales', description: 'Un skin enflammé qui brûle vos ennemis du regard', price: 500, currency: 'gold', category: 'skin', image: '🔥', rarity: 'rare', owned: false },
@@ -93,38 +133,25 @@ const generateShopItems = (): ShopItem[] => [
   { id: 'bg-neon', name: 'Fond Néon', description: 'Cyberpunk vibes', price: 1200, currency: 'gems', category: 'background', image: '💜', rarity: 'legendary', owned: false },
 ];
 
-const generateBotPlayers = (): Player[] => {
-  const names = ['ShadowHunter', 'NightBlade', 'PhoenixRise', 'StormBreaker', 'DarkMage', 'IceQueen', 'FireLord', 'ThunderGod'];
-  const skins = ['🔥', '❄️', '🌑', '⚡', '💀', '🦊', '🐉', '👑'];
-  return names.map((name, i) => ({
-    id: `bot-${i}`,
-    name,
-    position: [Math.random() * 40 - 20, 0.5, Math.random() * 40 - 20] as [number, number, number],
-    health: 100,
-    maxHealth: 100,
-    gold: Math.floor(Math.random() * 500),
-    gems: Math.floor(Math.random() * 50),
-    tokens: 0,
-    inventory: [],
-    skin: skins[i],
-    kills: 0,
-    deaths: 0,
-    isAlive: true,
-  }));
-};
-
-const generateResources = (): Resource[] => {
+const generateResources = (mapId: string): Resource[] => {
+  const map = getMapById(mapId);
+  if (!map) return [];
+  
   const resources: Resource[] = [];
-  const types: Resource['type'][] = ['gold', 'wood', 'stone', 'gem'];
-  for (let i = 0; i < 30; i++) {
-    resources.push({
-      id: `res-${i}`,
-      type: types[Math.floor(Math.random() * types.length)],
-      position: [Math.random() * 50 - 25, 0.3, Math.random() * 50 - 25],
-      amount: Math.floor(Math.random() * 50) + 10,
-      collected: false,
-    });
-  }
+  let id = 0;
+  
+  map.resources.forEach(resConfig => {
+    for (let i = 0; i < resConfig.count; i++) {
+      resources.push({
+        id: `res-${id++}`,
+        type: resConfig.type as Resource['type'],
+        position: [Math.random() * 50 - 25, 0.3, Math.random() * 50 - 25],
+        amount: Math.floor(Math.random() * 50) + 10,
+        collected: false,
+      });
+    }
+  });
+  
   return resources;
 };
 
@@ -133,6 +160,12 @@ const initialState: GameState = {
   user: null,
   isAdmin: false,
   currentPage: 'login',
+  selectedMap: null,
+  gameMode: null,
+  roomCode: null,
+  lobbyPlayers: [],
+  lobbyCountdown: 10,
+  lobbyStatus: 'waiting',
   players: [],
   localPlayer: null,
   traps: [],
@@ -159,16 +192,10 @@ function subscribe(listener: Listener) {
   return () => listeners.delete(listener);
 }
 
-function getState() {
-  return state;
-}
-
-// Hook
 export function useGameStore<T>(selector: (s: GameState) => T): T {
   return useSyncExternalStore(subscribe, () => selector(state), () => selector(state));
 }
 
-// Actions
 export const actions = {
   login(provider: string, userData: { name?: string; email?: string; avatar?: string }) {
     setState({
@@ -198,30 +225,144 @@ export const actions = {
     setState({ currentPage: page });
   },
 
-  startGame() {
-    const bots = generateBotPlayers();
-    const localPlayer: Player = {
+  setSelectedMap(mapId: string) {
+    setState({ selectedMap: mapId });
+  },
+
+  setGameMode(mode: 'public' | 'private') {
+    setState({ gameMode: mode });
+  },
+
+  setRoomCode(code: string) {
+    setState({ roomCode: code });
+  },
+
+  setLobbyStatus(status: 'waiting' | 'countdown') {
+    setState({ lobbyStatus: status });
+  },
+
+  updateLobbyCountdown(delta: number) {
+    setState({ lobbyCountdown: Math.max(0, state.lobbyCountdown + delta) });
+  },
+
+  addLobbyPlayer() {
+    const usedNames = state.lobbyPlayers.map(p => p.name);
+    const availableNames = BOT_NAMES.filter(n => !usedNames.includes(n));
+    if (availableNames.length === 0) return;
+    
+    const idx = state.lobbyPlayers.length;
+    const newPlayer: LobbyPlayer = {
+      id: `lobby-${Date.now()}-${idx}`,
+      name: availableNames[Math.floor(Math.random() * availableNames.length)],
+      avatar: BOT_AVATARS[idx % BOT_AVATARS.length],
+      isBot: true,
+      isReady: true,
+    };
+    setState({ lobbyPlayers: [...state.lobbyPlayers, newPlayer] });
+  },
+
+  startLobby(mode: 'public' | 'private') {
+    const localPlayer: LobbyPlayer = {
       id: 'local',
       name: state.user?.name || 'Joueur',
-      position: [0, 0.5, 0],
+      avatar: state.user?.avatar || '🎮',
+      isBot: false,
+      isReady: true,
+    };
+    
+    // Add initial bots (3-5) to simulate other players
+    const botCount = mode === 'private' ? 2 : Math.floor(Math.random() * 3) + 3;
+    const bots: LobbyPlayer[] = [];
+    for (let i = 0; i < botCount; i++) {
+      bots.push({
+        id: `lobby-bot-${i}`,
+        name: BOT_NAMES[i % BOT_NAMES.length],
+        avatar: BOT_AVATARS[i % BOT_AVATARS.length],
+        isBot: true,
+        isReady: true,
+      });
+    }
+    
+    setState({
+      lobbyPlayers: [localPlayer, ...bots],
+      lobbyCountdown: 10,
+      lobbyStatus: 'waiting',
+      gameMode: mode,
+      roomCode: mode === 'private' ? generateRoomCode() : null,
+      currentPage: 'lobby',
+    });
+  },
+
+  startGameFromLobby() {
+    const mapId = state.selectedMap || 'neon-city';
+    const map = getMapById(mapId);
+    if (!map) return;
+    
+    // Create game players from lobby
+    const gamePlayers: Player[] = state.lobbyPlayers.map((lp, i) => ({
+      id: lp.id,
+      name: lp.name,
+      position: [
+        Math.cos(i * (Math.PI * 2 / state.lobbyPlayers.length)) * 15,
+        0.5,
+        Math.sin(i * (Math.PI * 2 / state.lobbyPlayers.length)) * 15
+      ] as [number, number, number],
       health: 100,
       maxHealth: 100,
-      gold: 200,
-      gems: 10,
-      tokens: 5,
-      inventory: [
+      gold: lp.id === 'local' ? 200 : Math.floor(Math.random() * 300),
+      gems: lp.id === 'local' ? 10 : Math.floor(Math.random() * 30),
+      tokens: lp.id === 'local' ? 5 : 0,
+      inventory: lp.id === 'local' ? [
         { id: 'sword-1', name: 'Épée Basique', type: 'weapon', quantity: 1, damage: 10 },
         { id: 'trap-basic', name: 'Piège Simple', type: 'trap', quantity: 3, damage: 20 },
-      ],
-      skin: '⚡',
+      ] : [],
+      skin: lp.avatar,
       kills: 0,
       deaths: 0,
       isAlive: true,
-    };
+      isBot: lp.isBot,
+      outfitColor: lp.id === 'local' ? '#00cc66' : BOT_OUTFITS[i % BOT_OUTFITS.length],
+      hairColor: BOT_HAIRS[i % BOT_HAIRS.length],
+      skinColor: BOT_SKINS[i % BOT_SKINS.length],
+    }));
+    
+    // Fill remaining slots with bots if needed (for public mode)
+    if (state.gameMode === 'public' && gamePlayers.length < 9) {
+      const needed = 9 - gamePlayers.length;
+      for (let i = 0; i < needed; i++) {
+        const idx = gamePlayers.length;
+        gamePlayers.push({
+          id: `bot-${idx}`,
+          name: BOT_NAMES[idx % BOT_NAMES.length] + (idx > 9 ? `_${idx}` : ''),
+          position: [
+            Math.cos(idx * (Math.PI * 2 / 9)) * 15,
+            0.5,
+            Math.sin(idx * (Math.PI * 2 / 9)) * 15
+          ] as [number, number, number],
+          health: 100,
+          maxHealth: 100,
+          gold: Math.floor(Math.random() * 300),
+          gems: Math.floor(Math.random() * 30),
+          tokens: 0,
+          inventory: [],
+          skin: BOT_AVATARS[idx % BOT_AVATARS.length],
+          kills: 0,
+          deaths: 0,
+          isAlive: true,
+          isBot: true,
+          outfitColor: BOT_OUTFITS[idx % BOT_OUTFITS.length],
+          hairColor: BOT_HAIRS[idx % BOT_HAIRS.length],
+          skinColor: BOT_SKINS[idx % BOT_SKINS.length],
+        });
+      }
+    }
+    
+    const localPlayer = gamePlayers.find(p => p.id === 'local') || gamePlayers[0];
+    
     setState({
-      players: [localPlayer, ...bots],
+      players: gamePlayers,
       localPlayer,
-      resources: generateResources(),
+      resources: generateResources(mapId),
       traps: [],
       swapTimer: 90,
       gameStatus: 'playing',
@@ -312,7 +453,7 @@ export const actions = {
 
     const killedPlayer = newPlayers.find(p => p.id === playerId);
     if (killedPlayer && killedPlayer.health === 0) {
-      const killer = state.localPlayer?.id === playerId ? 'Trap' : (state.localPlayer?.name || 'Trap');
+      const killer = state.localPlayer?.name || 'Trap';
       setState({
         killFeed: [{ killer, victim: killedPlayer.name, method, time: Date.now() }, ...state.killFeed].slice(0, 10),
       });

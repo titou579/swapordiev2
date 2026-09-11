@@ -132,7 +132,7 @@ export default function ResultScreen() {
           className="flex gap-3"
         >
           <button
-            onClick={() => actions.startGame()}
+            onClick={() => actions.setPage('mapSelect')}
             className="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 rounded-2xl text-white font-bold text-lg shadow-lg shadow-green-500/25 transition-all transform hover:scale-[1.02]"
           >
             🔄 Rejouer

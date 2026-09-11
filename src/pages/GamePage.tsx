@@ -1,95 +1,22 @@
 import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Text, Sky } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore, actions, Player, Resource, Trap as TrapType } from '../store/gameStore';
+import { getMapById } from '../data/maps';
+import Character from '../components/Character';
+import MapRenderer from '../components/MapRenderer';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Ground Component
-function Ground() {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
+function Ground({ color }: { color: string }) {
   return (
     <group>
-      {/* Main ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
         <planeGeometry args={[60, 60]} />
-        <meshStandardMaterial color="#0f0f23" metalness={0.4} roughness={0.6} />
+        <meshStandardMaterial color={color} metalness={0.4} roughness={0.6} />
       </mesh>
-      {/* Grid lines */}
       <gridHelper args={[60, 30, '#3b0764', '#1e0538']} position={[0, 0.01, 0]} />
-    </group>
-  );
-}
-
-// Decorative structures
-function MapStructures() {
-  const structures = [
-    { pos: [10, 1, 10] as [number, number, number], size: [2, 2, 2] as [number, number, number], color: '#4c1d95' },
-    { pos: [-10, 1.5, -10] as [number, number, number], size: [3, 3, 3] as [number, number, number], color: '#581c87' },
-    { pos: [15, 0.5, -15] as [number, number, number], size: [1, 1, 4] as [number, number, number], color: '#6b21a8' },
-    { pos: [-15, 2, 15] as [number, number, number], size: [4, 4, 1] as [number, number, number], color: '#7c3aed' },
-    { pos: [0, 1, -20] as [number, number, number], size: [6, 2, 1] as [number, number, number], color: '#4c1d95' },
-    { pos: [-20, 1, 0] as [number, number, number], size: [1, 2, 6] as [number, number, number], color: '#581c87' },
-    { pos: [20, 0.75, 5] as [number, number, number], size: [2, 1.5, 2] as [number, number, number], color: '#6b21a8' },
-    { pos: [-5, 1, 20] as [number, number, number], size: [3, 2, 1] as [number, number, number], color: '#7c3aed' },
-    { pos: [8, 0.5, -8] as [number, number, number], size: [1.5, 1, 1.5] as [number, number, number], color: '#8b5cf6' },
-    { pos: [-12, 1, 8] as [number, number, number], size: [2, 2, 2] as [number, number, number], color: '#a78bfa' },
-  ];
-
-  return (
-    <group>
-      {structures.map((s, i) => (
-        <mesh key={i} position={s.pos} castShadow receiveShadow>
-          <boxGeometry args={s.size} />
-          <meshStandardMaterial
-            color={s.color}
-            emissive={s.color}
-            emissiveIntensity={0.15}
-            metalness={0.7}
-            roughness={0.3}
-          />
-        </mesh>
-      ))}
-      {/* Central pillar */}
-      <mesh position={[0, 3, 0]} castShadow>
-        <cylinderGeometry args={[0.5, 0.8, 6, 8]} />
-        <meshStandardMaterial color="#7c3aed" emissive="#4c1d95" emissiveIntensity={0.3} metalness={0.9} roughness={0.1} />
-      </mesh>
-      {/* Floating crystals */}
-      {[[-8, 4, -5], [12, 3, 8], [-18, 5, -18], [18, 4, 18]].map((pos, i) => (
-        <FloatingCrystal key={i} position={pos as [number, number, number]} />
-      ))}
-    </group>
-  );
-}
-
-function FloatingCrystal({ position }: { position: [number, number, number] }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + position[0]) * 0.5;
-      meshRef.current.rotation.y = state.clock.elapsedTime;
-      meshRef.current.rotation.x = state.clock.elapsedTime * 0.5;
-    }
-  });
-
-  return (
-    <group>
-      <mesh ref={meshRef} position={position}>
-        <octahedronGeometry args={[0.6]} />
-        <meshStandardMaterial
-          color="#a855f7"
-          emissive="#7c3aed"
-          emissiveIntensity={0.8}
-          metalness={0.9}
-          roughness={0.1}
-          transparent
-          opacity={0.8}
-        />
-      </mesh>
-      <pointLight position={position} color="#a855f7" intensity={3} distance={5} />
     </group>
   );
 }
@@ -109,94 +36,12 @@ function Boundaries() {
             <boxGeometry args={wall.size} />
             <meshStandardMaterial color="#2e1065" transparent opacity={0.4} metalness={0.8} roughness={0.2} />
           </mesh>
-          {/* Glow strip */}
           <mesh position={[wall.pos[0], 0.1, wall.pos[2]]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[wall.size[0] || wall.size[2], 0.5]} />
             <meshBasicMaterial color="#7c3aed" transparent opacity={0.5} />
           </mesh>
         </group>
       ))}
-    </group>
-  );
-}
-
-// Player 3D Component
-function PlayerMesh({ player, isLocal }: { player: Player; isLocal: boolean }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  const trailRef = useRef<THREE.Points>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.position.x = player.position[0];
-      meshRef.current.position.z = player.position[2];
-      meshRef.current.position.y = player.position[1] + Math.sin(state.clock.elapsedTime * 2 + player.position[0]) * 0.15;
-      meshRef.current.rotation.y = state.clock.elapsedTime * (isLocal ? 1 : 0.5);
-    }
-    if (glowRef.current) {
-      glowRef.current.position.x = player.position[0];
-      glowRef.current.position.z = player.position[2];
-      glowRef.current.position.y = 0.05;
-      glowRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 3) * 0.15);
-    }
-  });
-
-  const color = isLocal ? '#00ff88' : '#ff4444';
-  const emissive = isLocal ? '#004422' : '#440000';
-
-  if (!player.isAlive) return null;
-
-  return (
-    <group>
-      {/* Player body */}
-      <mesh ref={meshRef} castShadow>
-        <capsuleGeometry args={[0.35, 0.7, 8, 16]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={emissive}
-          emissiveIntensity={0.6}
-          metalness={0.7}
-          roughness={0.2}
-        />
-      </mesh>
-      {/* Ground glow ring */}
-      <mesh ref={glowRef} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.6, 0.9, 32]} />
-        <meshBasicMaterial color={color} transparent opacity={0.25} />
-      </mesh>
-      {/* Player light */}
-      <pointLight
-        position={[player.position[0], 1, player.position[2]]}
-        color={color}
-        intensity={isLocal ? 3 : 1.5}
-        distance={isLocal ? 6 : 3}
-      />
-      {/* Name tag and health */}
-      <group position={[player.position[0], 2.2, player.position[2]]}>
-        <Text fontSize={0.35} color="white" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="#000000">
-          {player.skin}
-        </Text>
-        {/* Health bar background */}
-        <mesh position={[0, -0.45, 0]}>
-          <planeGeometry args={[1.2, 0.12]} />
-          <meshBasicMaterial color="#1a1a1a" />
-        </mesh>
-        {/* Health bar fill */}
-        <mesh position={[(player.health / player.maxHealth - 1) * 0.6, -0.45, 0.01]}>
-          <planeGeometry args={[player.health / player.maxHealth * 1.2, 0.12]} />
-          <meshBasicMaterial color={player.health > 60 ? '#22c55e' : player.health > 30 ? '#eab308' : '#ef4444'} />
-        </mesh>
-        {isLocal && (
-          <Text fontSize={0.22} color="#00ff88" anchorX="center" position={[0, 0.5, 0]} outlineWidth={0.01} outlineColor="#000">
-            {player.name}
-          </Text>
-        )}
-        {!isLocal && (
-          <Text fontSize={0.18} color="#ff6666" anchorX="center" position={[0, 0.45, 0]} outlineWidth={0.01} outlineColor="#000">
-            {player.name}
-          </Text>
-        )}
-      </group>
     </group>
   );
 }
@@ -302,10 +147,10 @@ function TrapMesh({ trap }: { trap: TrapType }) {
   );
 }
 
-// Particle system for atmosphere
-function Particles() {
+// Floating particles
+function Particles({ color }: { color: string }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const count = 200;
+  const count = 150;
   const positions = new Float32Array(count * 3);
 
   for (let i = 0; i < count; i++) {
@@ -336,7 +181,7 @@ function Particles() {
           itemSize={3}
         />
       </bufferGeometry>
-      <pointsMaterial size={0.08} color="#a855f7" transparent opacity={0.6} sizeAttenuation />
+      <pointsMaterial size={0.08} color={color} transparent opacity={0.6} sizeAttenuation />
     </points>
   );
 }
@@ -366,7 +211,7 @@ function BotAI() {
     const interval = setInterval(() => {
       const currentPlayers = useGameStore(s => s.players);
       currentPlayers.forEach((player: Player) => {
-        if (player.id === 'local' || !player.isAlive) return;
+        if (player.id === 'local' || !player.isAlive || !player.isBot) return;
         const dx = (Math.random() - 0.5) * 3;
         const dz = (Math.random() - 0.5) * 3;
         const newX = Math.max(-28, Math.min(28, player.position[0] + dx));
@@ -385,10 +230,15 @@ function GameScene() {
   const players = useGameStore(s => s.players);
   const resources = useGameStore(s => s.resources);
   const traps = useGameStore(s => s.traps);
+  const selectedMap = useGameStore(s => s.selectedMap);
+  const localPlayer = useGameStore(s => s.localPlayer);
+
+  const mapData = selectedMap ? getMapById(selectedMap) : getMapById('neon-city');
+  if (!mapData) return null;
 
   return (
     <>
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={mapData.theme.ambientLight} />
       <directionalLight
         position={[15, 25, 10]}
         intensity={0.8}
@@ -400,18 +250,46 @@ function GameScene() {
         shadow-camera-top={30}
         shadow-camera-bottom={-30}
       />
-      <pointLight position={[0, 8, 0]} intensity={1} color="#7c3aed" distance={30} />
-      <hemisphereLight args={['#1a0033', '#000011', 0.3]} />
+      <pointLight position={[0, 8, 0]} intensity={0.8} color="#7c3aed" distance={30} />
+      <hemisphereLight args={[mapData.theme.skyColor, mapData.theme.groundColor, 0.3]} />
 
-      <fog attach="fog" args={['#050010', 15, 55]} />
+      <fog attach="fog" args={[mapData.theme.fogColor, mapData.theme.fogNear, mapData.theme.fogFar]} />
 
-      <Ground />
-      <MapStructures />
+      <Ground color={mapData.theme.groundColor} />
+      <MapRenderer map={mapData} />
       <Boundaries />
-      <Particles />
+      <Particles color={mapData.id === 'frozen-tundra' ? '#ffffff' : '#a855f7'} />
 
+      {/* Players as humanoid characters */}
       {players.map((player: Player) => (
-        <PlayerMesh key={player.id} player={player} isLocal={player.id === 'local'} />
+        player.isAlive && (
+          <group key={player.id}>
+            <Character
+              position={player.position}
+              skinColor={player.skinColor || '#ffdbac'}
+              outfitColor={player.outfitColor || (player.id === 'local' ? '#00cc66' : '#e74c3c')}
+              hairColor={player.hairColor || '#3d2314'}
+              name={player.name}
+              isLocal={player.id === 'local'}
+              health={player.health}
+              maxHealth={player.maxHealth}
+              skin={player.skin}
+              isMoving={player.id === 'local' ? true : player.isBot}
+            />
+            {/* Name tag using Text */}
+            <Text
+              position={[player.position[0], 2.5, player.position[2]]}
+              fontSize={0.2}
+              color={player.id === 'local' ? '#00ff88' : '#ff6666'}
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={0.02}
+              outlineColor="#000000"
+            >
+              {player.name}
+            </Text>
+          </group>
+        )
       ))}
 
       {resources.map((resource: Resource) => (
@@ -486,10 +364,12 @@ function GameHUD() {
   const roundNumber = useGameStore(s => s.roundNumber);
   const killFeed = useGameStore(s => s.killFeed);
   const players = useGameStore(s => s.players);
+  const selectedMap = useGameStore(s => s.selectedMap);
   const [showInventory, setShowInventory] = useState(false);
   const [placingTrap, setPlacingTrap] = useState(false);
 
   const aliveCount = players.filter(p => p.isAlive).length;
+  const mapData = selectedMap ? getMapById(selectedMap) : null;
 
   // Swap timer
   useEffect(() => {
@@ -563,12 +443,21 @@ function GameHUD() {
           className={`h-full bg-gradient-to-r ${timerBarColor}`}
           style={{ width: `${timerPercent}%` }}
           animate={swapTimer <= 10 ? { opacity: [1, 0.5, 1] } : {}}
-          transition={{ duration: 0.5, repeat: Infinity }}
+          transition={{ duration: 0.5, repeat: swapTimer <= 10 ? Infinity : 0 }}
         />
       </div>
 
+      {/* Map name */}
+      {mapData && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2">
+          <span className="text-gray-400 text-xs bg-gray-900/60 px-3 py-1 rounded-full backdrop-blur-sm">
+            {mapData.emoji} {mapData.name}
+          </span>
+        </div>
+      )}
+
       {/* Top HUD */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+      <div className="absolute top-8 left-4 right-4 flex justify-between items-start">
         {/* Player Stats */}
         <motion.div
           initial={{ x: -100, opacity: 0 }}
@@ -587,7 +476,6 @@ function GameHUD() {
               </div>
             </div>
           </div>
-          {/* Health bar */}
           <div className="mt-3 w-44">
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-400">HP</span>
@@ -603,7 +491,7 @@ function GameHUD() {
           </div>
         </motion.div>
 
-        {/* Swap Timer - Center */}
+        {/* Swap Timer */}
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -632,7 +520,7 @@ function GameHUD() {
         >
           <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-2 font-bold">⚔️ Kill Feed</p>
           <AnimatePresence>
-            {killFeed.slice(0, 5).map((kill, i) => (
+            {killFeed.slice(0, 5).map((kill) => (
               <motion.div
                 key={kill.time}
                 initial={{ opacity: 0, x: 20, height: 0 }}
@@ -652,12 +540,17 @@ function GameHUD() {
 
       {/* Bottom HUD */}
       <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-        {/* Controls hint */}
+        {/* Mobile controls */}
+        <div className="md:hidden pointer-events-auto">
+          <MobileControls />
+        </div>
+
+        {/* Controls hint (desktop) */}
         <motion.div
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="bg-gray-900/70 backdrop-blur-md rounded-xl p-3 border border-gray-700/50"
+          className="hidden md:block bg-gray-900/70 backdrop-blur-md rounded-xl p-3 border border-gray-700/50"
         >
           <p className="text-gray-400 text-[10px] uppercase tracking-wider font-bold mb-1.5">Contrôles</p>
           <div className="space-y-0.5">
@@ -666,11 +559,6 @@ function GameHUD() {
             <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">I</kbd> Inventaire</p>
           </div>
         </motion.div>
-
-        {/* Mobile joystick area */}
-        <div className="md:hidden absolute bottom-20 left-4 pointer-events-auto">
-          <MobileControls />
-        </div>
 
         {/* Action buttons */}
         <motion.div
@@ -704,7 +592,7 @@ function GameHUD() {
         </motion.div>
       </div>
 
-      {/* Swap Warning Overlay */}
+      {/* Swap Warning */}
       <AnimatePresence>
         {gameStatus === 'swapping' && (
           <motion.div
@@ -792,6 +680,8 @@ function GameHUD() {
 export default function GamePage() {
   const gameStatus = useGameStore(s => s.gameStatus);
   const localPlayer = useGameStore(s => s.localPlayer);
+  const selectedMap = useGameStore(s => s.selectedMap);
+  const mapData = selectedMap ? getMapById(selectedMap) : getMapById('neon-city');
 
   useEffect(() => {
     if (localPlayer && !localPlayer.isAlive && gameStatus === 'playing') {
@@ -806,7 +696,7 @@ export default function GamePage() {
         camera={{ position: [0, 15, 15], fov: 55 }}
         gl={{ antialias: true, alpha: false }}
         onCreated={({ gl }) => {
-          gl.setClearColor('#050010');
+          gl.setClearColor(mapData?.theme.fogColor || '#050010');
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.2;
         }}
