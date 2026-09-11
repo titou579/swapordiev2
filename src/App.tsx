@@ -1,4 +1,5 @@
-import { useGameStore } from './store/gameStore';
+import { useEffect } from 'react';
+import { useGameStore, actions } from './store/gameStore';
 import LoginPage from './pages/LoginPage';
 import MainMenu from './pages/MainMenu';
 import MapSelectPage from './pages/MapSelectPage';
@@ -15,6 +16,11 @@ export default function App() {
   const gameStatus = useGameStore(s => s.gameStatus);
   const gameMode = useGameStore(s => s.gameMode);
   const roomCode = useGameStore(s => s.roomCode);
+
+  // Initialize user from localStorage on mount
+  useEffect(() => {
+    actions.initUser();
+  }, []);
 
   // Route to the correct page
   if (!isAuthenticated || currentPage === 'login') {

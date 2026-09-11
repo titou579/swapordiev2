@@ -22,23 +22,27 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900">
-      <div className="max-w-7xl mx-auto p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0015] via-[#1a0033] to-[#0a0015] relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+        backgroundSize: '50px 50px'
+      }} />
+      <div className="relative z-10 max-w-7xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500"
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500"
             >
-              ⚙️ PANEL ADMIN
+              ⚙️ Panel Admin
             </motion.h1>
-            <p className="text-gray-400 mt-1">Connecté en tant que {user?.name}</p>
+            <p className="text-gray-400 mt-1">Connecté en tant que {user?.username}</p>
           </div>
           <button
             onClick={() => actions.setPage('menu')}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-xl text-gray-300 font-medium transition-all"
+            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-gray-300 font-medium transition-all text-sm"
           >
             ← Retour au menu
           </button>
