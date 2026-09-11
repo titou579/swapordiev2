@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { MAPS, getMapById } from '../data/maps';
 import { userStorage, UserAccount } from '../utils/userStorage';
+import { battlePassActions } from './battlePassStore';
 
 export interface Player {
   id: string;
@@ -73,7 +74,7 @@ interface GameState {
   isAuthenticated: boolean;
   user: UserAccount | null;
   isAdmin: boolean;
-  currentPage: 'login' | 'menu' | 'mapSelect' | 'lobby' | 'game' | 'shop' | 'admin' | 'profile';
+  currentPage: 'login' | 'menu' | 'mapSelect' | 'lobby' | 'game' | 'shop' | 'admin' | 'profile' | 'battlepass';
   
   // Map & Mode
   selectedMap: string | null;
@@ -444,6 +445,24 @@ export const actions = {
   },
 
   endGame() {
+    // Award XP based on performance
+    const localPlayer = state.localPlayer;
+    if (localPlayer) {
+      // Base XP for playing
+      battlePassActions.addXP(25);
+      
+      // Bonus XP for kills
+      if (localPlayer.kills > 0) {
+        battlePassActions.addXP(localPlayer.kills * 10);
+      }
+      
+      // Bonus XP for winning
+      if (localPlayer.isAlive) {
+        battlePassActions.addXP(100);
+        battlePassActions.updateQuestProgress('weekly-2', 1); // Survivant
+      }
+    }
+
     setState({ gameStatus: 'ended', currentPage: 'menu' });
   },
 
@@ -461,6 +480,9 @@ export const actions = {
       const idx = alivePlayers.findIndex(ap => ap.id === p.id);
       return { ...p, position: shuffled[idx] };
     });
+
+    // Update battle pass quest progress for swaps
+    battlePassActions.updateQuestProgress('daily-1', 1); // Premier Swap
 
     setTimeout(() => {
       setState({
@@ -508,11 +530,17 @@ export const actions = {
 
     const newPlayers = state.players.map(p => p.id === 'local' ? newLocal : p);
     setState({ resources: newResources, localPlayer: newLocal, players: newPlayers });
+
+    // Update battle pass quest progress
+    battlePassActions.updateQuestProgress('daily-2', 1); // Collecteur
   },
 
   placeTrap(trapData: Omit<Trap, 'id' | 'isActive' | 'triggered'>) {
     const newTrap: Trap = { ...trapData, id: `trap-${Date.now()}`, isActive: true, triggered: false };
     setState({ traps: [...state.traps, newTrap] });
+
+    // Update battle pass quest progress
+    battlePassActions.updateQuestProgress('daily-3', 1); // Piégeur
   },
 
   damagePlayer(playerId: string, damage: number, method: string) {
@@ -528,6 +556,9 @@ export const actions = {
       setState({
         killFeed: [{ killer, victim: killedPlayer.name, method, time: Date.now() }, ...state.killFeed].slice(0, 10),
       });
+
+      // Update battle pass quest progress for kills
+      battlePassActions.updateQuestProgress('weekly-1', 1); // Guerrier
     }
 
     setState({

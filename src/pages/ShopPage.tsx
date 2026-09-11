@@ -5,6 +5,7 @@ import { useGameStore, actions, ShopItem } from '../store/gameStore';
 export default function ShopPage() {
   const shopItems = useGameStore(s => s.shopItems);
   const localPlayer = useGameStore(s => s.localPlayer);
+  const user = useGameStore(s => s.user);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
@@ -22,10 +23,10 @@ export default function ShopPage() {
     : shopItems.filter(item => item.category === selectedCategory);
 
   const rarityColors: Record<string, string> = {
-    common: 'border-gray-500 bg-gray-500/10',
-    rare: 'border-blue-500 bg-blue-500/10',
-    epic: 'border-purple-500 bg-purple-500/10',
-    legendary: 'border-yellow-500 bg-yellow-500/10',
+    common: 'border-gray-500/30 bg-gray-500/5',
+    rare: 'border-blue-500/30 bg-blue-500/5',
+    epic: 'border-purple-500/30 bg-purple-500/5',
+    legendary: 'border-yellow-500/30 bg-yellow-500/5',
   };
 
   const rarityLabels: Record<string, string> = {
@@ -51,12 +52,47 @@ export default function ShopPage() {
   };
 
   const canAfford = (item: ShopItem): boolean => {
-    if (!localPlayer) return false;
-    if (item.currency === 'gold') return localPlayer.gold >= item.price;
-    if (item.currency === 'gems') return localPlayer.gems >= item.price;
-    if (item.currency === 'tokens') return localPlayer.tokens >= item.price;
+    const player = localPlayer || user;
+    if (!player) return false;
+    if (item.currency === 'gold') return (player.gold || 0) >= item.price;
+    if (item.currency === 'gems') return (player.gems || 0) >= item.price;
+    if (item.currency === 'tokens') return (player.tokens || 0) >= item.price;
     return false;
   };
+
+  // Special offers
+  const specialOffers = [
+    {
+      id: 'starter-pack',
+      name: 'Pack Débutant',
+      description: '500 Or + 20 Gemmes + Skin Exclusif',
+      price: '4.99€',
+      image: '🎁',
+      originalPrice: '9.99€',
+      discount: '-50%',
+      gradient: 'from-green-500 to-emerald-600',
+    },
+    {
+      id: 'pro-pack',
+      name: 'Pack Pro',
+      description: '2000 Or + 100 Gemmes + 5 Tokens',
+      price: '9.99€',
+      image: '💎',
+      originalPrice: '19.99€',
+      discount: '-50%',
+      gradient: 'from-purple-500 to-pink-600',
+    },
+    {
+      id: 'legendary-pack',
+      name: 'Pack Légendaire',
+      description: '5000 Or + 300 Gemmes + 15 Tokens + Skin Légendaire',
+      price: '19.99€',
+      image: '👑',
+      originalPrice: '39.99€',
+      discount: '-50%',
+      gradient: 'from-yellow-500 to-orange-600',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a0015] via-[#1a0033] to-[#0a0015] relative overflow-hidden">
@@ -72,28 +108,28 @@ export default function ShopPage() {
 
       <div className="relative z-10 max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500"
+              className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500"
             >
-              🛒 BOUTIQUE
+              🛒 Boutique
             </motion.h1>
-            <p className="text-gray-400 mt-1">Personnalise ton expérience</p>
+            <p className="text-gray-400 mt-1 text-sm">Personnalise ton expérience</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {/* Currency display */}
-            <div className="flex gap-3">
-              <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-700/50">
-                <span className="text-yellow-400">💰 {localPlayer?.gold || 0}</span>
+            <div className="hidden md:flex gap-2">
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/10">
+                <span className="text-yellow-400 text-sm font-medium">💰 {localPlayer?.gold || user?.gold || 0}</span>
               </div>
-              <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-700/50">
-                <span className="text-blue-400">💎 {localPlayer?.gems || 0}</span>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/10">
+                <span className="text-blue-400 text-sm font-medium">💎 {localPlayer?.gems || user?.gems || 0}</span>
               </div>
-              <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-700/50">
-                <span className="text-purple-400">🎟️ {localPlayer?.tokens || 0}</span>
+              <div className="bg-white/5 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/10">
+                <span className="text-purple-400 text-sm font-medium">🎟️ {localPlayer?.tokens || user?.tokens || 0}</span>
               </div>
             </div>
             <button
@@ -105,8 +141,47 @@ export default function ShopPage() {
           </div>
         </div>
 
+        {/* Special Offers */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <h2 className="text-white font-bold mb-3 flex items-center gap-2">
+            🔥 Offres Spéciales
+            <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full animate-pulse">Limité</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {specialOffers.map((offer, i) => (
+              <motion.div
+                key={offer.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ scale: 1.02, y: -3 }}
+                className={`bg-gradient-to-br ${offer.gradient} rounded-2xl p-4 border border-white/20 cursor-pointer relative overflow-hidden`}
+              >
+                <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {offer.discount}
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-4xl">{offer.image}</span>
+                  <div className="flex-1">
+                    <h3 className="text-white font-bold">{offer.name}</h3>
+                    <p className="text-white/70 text-xs">{offer.description}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-white font-bold">{offer.price}</span>
+                      <span className="text-white/50 line-through text-xs">{offer.originalPrice}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Categories */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2 mb-5 overflow-x-auto pb-2">
           {categories.map(cat => (
             <button
               key={cat.id}
@@ -114,7 +189,7 @@ export default function ShopPage() {
               className={`px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
                 selectedCategory === cat.id
                   ? `bg-gradient-to-r ${cat.color} text-white shadow-lg`
-                  : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700/50'
+                  : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'
               }`}
             >
               {cat.label}
@@ -123,28 +198,27 @@ export default function ShopPage() {
         </div>
 
         {/* Items Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {filteredItems.map((item, i) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              whileHover={{ scale: 1.02, y: -5 }}
+              transition={{ delay: i * 0.03 }}
+              whileHover={{ scale: 1.03, y: -3 }}
               onClick={() => setSelectedItem(item)}
-              className={`cursor-pointer rounded-2xl p-4 border-2 transition-all ${rarityColors[item.rarity]} hover:shadow-lg`}
+              className={`cursor-pointer rounded-2xl p-3 border-2 transition-all ${rarityColors[item.rarity]} hover:shadow-lg`}
             >
               <div className="text-center">
                 <motion.div
-                  className="text-5xl mb-3"
+                  className="text-4xl mb-2"
                   whileHover={{ scale: 1.2, rotate: 10 }}
                 >
                   {item.image}
                 </motion.div>
-                <h3 className="text-white font-bold text-sm">{item.name}</h3>
-                <p className="text-gray-400 text-xs mt-1">{item.description}</p>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                <h3 className="text-white font-bold text-xs truncate">{item.name}</h3>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                     item.rarity === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
                     item.rarity === 'epic' ? 'bg-purple-500/20 text-purple-400' :
                     item.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
@@ -152,12 +226,12 @@ export default function ShopPage() {
                   }`}>
                     {rarityLabels[item.rarity]}
                   </span>
-                  <span className="text-white font-bold text-sm">
-                    {currencyIcons[item.currency]} {item.price}
+                  <span className="text-white font-bold text-xs">
+                    {currencyIcons[item.currency]}{item.price}
                   </span>
                 </div>
                 {item.owned && (
-                  <div className="mt-2 text-green-400 text-xs font-bold">✓ Possédé</div>
+                  <div className="mt-1.5 text-green-400 text-[10px] font-bold">✓ Possédé</div>
                 )}
               </div>
             </motion.div>

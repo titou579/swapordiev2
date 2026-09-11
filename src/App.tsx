@@ -9,6 +9,7 @@ import ShopPage from './pages/ShopPage';
 import AdminPage from './pages/AdminPage';
 import ProfilePage from './pages/ProfilePage';
 import ResultScreen from './pages/ResultScreen';
+import BattlePassPage from './pages/BattlePassPage';
 
 export default function App() {
   const currentPage = useGameStore(s => s.currentPage);
@@ -47,6 +48,8 @@ export default function App() {
       return <AdminPage />;
     case 'profile':
       return <ProfilePage />;
+    case 'battlepass':
+      return <BattlePassPage />;
     default:
       return <MainMenu />;
   }

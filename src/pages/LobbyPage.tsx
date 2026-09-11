@@ -17,26 +17,42 @@ export default function LobbyPage() {
   // Simulate players joining
   useEffect(() => {
     if (lobbyStatus !== 'waiting') return;
+    
     const interval = setInterval(() => {
-      const currentPlayers = useGameStore(s => s.lobbyPlayers);
-      if (currentPlayers.length < 9 && Math.random() > 0.5) {
+      const currentState = useGameStore(s => ({ 
+        players: s.lobbyPlayers, 
+        status: s.lobbyStatus 
+      }));
+      
+      // Stop if countdown started or max players reached
+      if (currentState.status !== 'waiting' || currentState.players.length >= 9) {
+        clearInterval(interval);
+        return;
+      }
+      
+      if (Math.random() > 0.5) {
         actions.addLobbyPlayer();
       }
     }, 2500);
+    
     return () => clearInterval(interval);
   }, [lobbyStatus]);
 
   // Countdown when enough players
   useEffect(() => {
     if (lobbyStatus !== 'countdown') return;
+    
+    // Stop adding players immediately
     const interval = setInterval(() => {
       const current = useGameStore(s => s.lobbyCountdown);
       if (current <= 1) {
+        clearInterval(interval);
         actions.startGameFromLobby();
       } else {
         actions.updateLobbyCountdown(-1);
       }
     }, 1000);
+    
     return () => clearInterval(interval);
   }, [lobbyStatus]);
 
