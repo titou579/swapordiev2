@@ -201,6 +201,62 @@ function Particles({ color }: { color: string }) {
   );
 }
 
+// Impact particles for combat
+function ImpactParticles({ position, color = '#ff0000' }: { position: [number, number, number]; color?: string }) {
+  const pointsRef = useRef<THREE.Points>(null);
+  const count = 20;
+  const positions = new Float32Array(count * 3);
+  const velocities = useRef<Float32Array>(new Float32Array(count * 3));
+  const life = useRef(1);
+
+  useEffect(() => {
+    // Initialize velocities
+    for (let i = 0; i < count; i++) {
+      velocities.current[i * 3] = (Math.random() - 0.5) * 0.3;
+      velocities.current[i * 3 + 1] = Math.random() * 0.3;
+      velocities.current[i * 3 + 2] = (Math.random() - 0.5) * 0.3;
+    }
+  }, []);
+
+  useFrame(() => {
+    if (pointsRef.current && life.current > 0) {
+      const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < count; i++) {
+        posArray[i * 3] += velocities.current[i * 3];
+        posArray[i * 3 + 1] += velocities.current[i * 3 + 1];
+        posArray[i * 3 + 2] += velocities.current[i * 3 + 2];
+        velocities.current[i * 3 + 1] -= 0.01; // gravity
+      }
+      pointsRef.current.geometry.attributes.position.needsUpdate = true;
+      life.current -= 0.02;
+      
+      if (life.current <= 0) {
+        pointsRef.current.visible = false;
+      }
+    }
+  });
+
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = 0;
+    positions[i * 3 + 1] = 0;
+    positions[i * 3 + 2] = 0;
+  }
+
+  return (
+    <points ref={pointsRef} position={position}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial size={0.15} color={color} transparent opacity={0.8} sizeAttenuation />
+    </points>
+  );
+}
+
 // Camera controller
 function CameraController() {
   const { camera } = useThree();
@@ -225,20 +281,87 @@ function CameraController() {
   return null;
 }
 
-// Bot AI movement
+// Bot AI movement - Improved intelligence
 function BotAI() {
   useEffect(() => {
     const interval = setInterval(() => {
       const currentPlayers = useGameStore(s => s.players);
+      const localPlayer = useGameStore(s => s.localPlayer);
+      
       currentPlayers.forEach((player: Player) => {
         if (player.id === 'local' || !player.isAlive || !player.isBot) return;
-        const dx = (Math.random() - 0.5) * 3;
-        const dz = (Math.random() - 0.5) * 3;
-        const newX = Math.max(-28, Math.min(28, player.position[0] + dx));
-        const newZ = Math.max(-28, Math.min(28, player.position[2] + dz));
-        actions.moveBot(player.id, [newX, 0.5, newZ]);
+        
+        let targetX = player.position[0];
+        let targetZ = player.position[2];
+        
+        // Smart AI behavior
+        const behavior = Math.random();
+        
+        if (behavior < 0.3 && localPlayer) {
+          // 30% chance: Hunt player if nearby
+          const dx = localPlayer.position[0] - player.position[0];
+          const dz = localPlayer.position[2] - player.position[2];
+          const distance = Math.sqrt(dx * dx + dz * dz);
+          
+          if (distance < 20) {
+            // Move towards player
+            targetX += (dx / distance) * 2;
+            targetZ += (dz / distance) * 2;
+          } else {
+            // Random movement
+            targetX += (Math.random() - 0.5) * 3;
+            targetZ += (Math.random() - 0.5) * 3;
+          }
+        } else if (behavior < 0.5) {
+          // 20% chance: Collect resources
+          const resources = useGameStore(s => s.resources);
+          const uncollected = resources.filter(r => !r.collected);
+          
+          if (uncollected.length > 0) {
+            // Find nearest resource
+            let nearestResource = uncollected[0];
+            let nearestDist = Infinity;
+            
+            uncollected.forEach(r => {
+              const dx = r.position[0] - player.position[0];
+              const dz = r.position[2] - player.position[2];
+              const dist = Math.sqrt(dx * dx + dz * dz);
+              if (dist < nearestDist) {
+                nearestDist = dist;
+                nearestResource = r;
+              }
+            });
+            
+            if (nearestDist < 15) {
+              const dx = nearestResource.position[0] - player.position[0];
+              const dz = nearestResource.position[2] - player.position[2];
+              targetX += (dx / nearestDist) * 2;
+              targetZ += (dz / nearestDist) * 2;
+            }
+          }
+        } else {
+          // 50% chance: Random exploration
+          targetX += (Math.random() - 0.5) * 4;
+          targetZ += (Math.random() - 0.5) * 4;
+        }
+        
+        // Boundary check
+        targetX = Math.max(-28, Math.min(28, targetX));
+        targetZ = Math.max(-28, Math.min(28, targetZ));
+        
+        actions.moveBot(player.id, [targetX, 0.5, targetZ]);
+        
+        // Bots can place traps occasionally
+        if (Math.random() < 0.05) {
+          actions.placeTrap({
+            type: 'spike',
+            position: [player.position[0], 0, player.position[2]],
+            damage: 15,
+            ownerId: player.id,
+          });
+        }
       });
-    }, 800);
+    }, 600);
     return () => clearInterval(interval);
   }, []);
 
@@ -412,6 +535,32 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
   const selectedMap = useGameStore(s => s.selectedMap);
   const [showInventory, setShowInventory] = useState(false);
   const [placingTrap, setPlacingTrap] = useState(false);
+  const [isSprinting, setIsSprinting] = useState(false);
+  const placingTrapRef = useRef(placingTrap);
+  const showInventoryRef = useRef(showInventory);
+  const showCraftRef = useRef(showCraft);
+  
+  useEffect(() => {
+    placingTrapRef.current = placingTrap;
+    showInventoryRef.current = showInventory;
+    showCraftRef.current = showCraft;
+  }, [placingTrap, showInventory, showCraft]);
+
+  // Track sprint state
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsSprinting(true);
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') setIsSprinting(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const aliveCount = players.filter(p => p.isAlive).length;
   const mapData = selectedMap ? getMapById(selectedMap) : null;
@@ -424,41 +573,102 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
     return () => clearInterval(interval);
   }, []);
 
-  // Keyboard controls
+  // Keyboard controls - Robust system
   useEffect(() => {
     const keys: Record<string, boolean> = {};
+    let isSprinting = false;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      keys[e.key.toLowerCase()] = true;
-      if (e.key.toLowerCase() === 'e') setPlacingTrap(p => !p);
-      if (e.key.toLowerCase() === 'i') setShowInventory(p => !p);
+      const key = e.key.toLowerCase();
+      keys[key] = true;
+      
+      // Prevent default for game keys
+      if (['z', 'q', 's', 'd', 'w', 'a', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+        e.preventDefault();
+      }
+      
+      // Special actions
+      if (key === 'e') setPlacingTrap(!placingTrapRef.current);
+      if (key === 'i') setShowInventory(!showInventoryRef.current);
+      if (key === 'c') setShowCraft(!showCraftRef.current);
+      if (key === 'shift') isSprinting = true;
+      if (key === ' ') {
+        // Attack nearest enemy
+        const currentLocal = useGameStore(s => s.localPlayer);
+        const currentPlayers = useGameStore(s => s.players);
+        if (currentLocal) {
+          let nearestEnemy: Player | null = null;
+          let nearestDist = Infinity;
+          
+          currentPlayers.forEach((p: Player) => {
+            if (p.id !== 'local' && p.isAlive) {
+              const dx = currentLocal.position[0] - p.position[0];
+              const dz = currentLocal.position[2] - p.position[2];
+              const dist = Math.sqrt(dx * dx + dz * dz);
+              if (dist < nearestDist && dist < 3) {
+                nearestDist = dist;
+                nearestEnemy = p;
+              }
+            }
+          });
+          
+          if (nearestEnemy) {
+            actions.attackPlayer((nearestEnemy as Player).id);
+          }
+        }
+      }
     };
+
     const handleKeyUp = (e: KeyboardEvent) => {
-      keys[e.key.toLowerCase()] = false;
+      const key = e.key.toLowerCase();
+      keys[key] = false;
+      if (key === 'shift') isSprinting = false;
     };
 
     const moveInterval = setInterval(() => {
       const currentLocal = useGameStore(s => s.localPlayer);
       const currentStatus = useGameStore(s => s.gameStatus);
       if (!currentLocal || currentStatus !== 'playing') return;
+      
       let [x, y, z] = currentLocal.position;
-      const speed = 0.25;
-      if (keys['z'] || keys['w'] || keys['arrowup']) z -= speed;
-      if (keys['s'] || keys['arrowdown']) z += speed;
-      if (keys['q'] || keys['a'] || keys['arrowleft']) x -= speed;
-      if (keys['d'] || keys['arrowright']) x += speed;
+      const baseSpeed = 0.25;
+      const speed = isSprinting ? baseSpeed * 1.8 : baseSpeed;
+      
+      let moved = false;
+      
+      if (keys['z'] || keys['w'] || keys['arrowup']) {
+        z -= speed;
+        moved = true;
+      }
+      if (keys['s'] || keys['arrowdown']) {
+        z += speed;
+        moved = true;
+      }
+      if (keys['q'] || keys['a'] || keys['arrowleft']) {
+        x -= speed;
+        moved = true;
+      }
+      if (keys['d'] || keys['arrowright']) {
+        x += speed;
+        moved = true;
+      }
+      
+      // Boundary check
       x = Math.max(-28, Math.min(28, x));
       z = Math.max(-28, Math.min(28, z));
-      if (keys['z'] || keys['w'] || keys['s'] || keys['q'] || keys['a'] || keys['d'] || keys['arrowup'] || keys['arrowdown'] || keys['arrowleft'] || keys['arrowright']) {
+      
+      if (moved) {
         actions.movePlayer([x, y, z]);
       }
     }, 16);
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    // Use capture phase to ensure we get events before canvas
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('keyup', handleKeyUp, { capture: true });
+    
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('keyup', handleKeyUp, { capture: true });
       clearInterval(moveInterval);
     };
   }, []);
@@ -534,6 +744,69 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
               />
             </div>
           </div>
+          {/* Sprint indicator */}
+          {isSprinting && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-2 flex items-center gap-1 text-xs text-yellow-400"
+            >
+              <span>⚡</span>
+              <span className="font-bold">SPRINT</span>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Mini-map */}
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-3 border border-gray-700/50"
+        >
+          <div className="w-32 h-32 bg-gray-800 rounded-xl relative overflow-hidden border border-gray-600/50">
+            {/* Map background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-900" />
+            
+            {/* Player dot */}
+            {localPlayer && (
+              <motion.div
+                className="absolute w-2 h-2 bg-green-400 rounded-full shadow-lg shadow-green-400/50"
+                animate={{
+                  left: `${((localPlayer.position[0] + 30) / 60) * 100}%`,
+                  top: `${((localPlayer.position[2] + 30) / 60) * 100}%`,
+                }}
+                transition={{ duration: 0.1 }}
+              />
+            )}
+            
+            {/* Enemy dots */}
+            {players.filter(p => p.id !== 'local' && p.isAlive).map((enemy) => (
+              <motion.div
+                key={enemy.id}
+                className="absolute w-1.5 h-1.5 bg-red-400 rounded-full"
+                animate={{
+                  left: `${((enemy.position[0] + 30) / 60) * 100}%`,
+                  top: `${((enemy.position[2] + 30) / 60) * 100}%`,
+                }}
+                transition={{ duration: 0.1 }}
+              />
+            ))}
+            
+            {/* Resources dots */}
+            <div className="absolute inset-0">
+              {useGameStore(s => s.resources).filter(r => !r.collected).slice(0, 20).map((resource) => (
+                <div
+                  key={resource.id}
+                  className="absolute w-1 h-1 bg-yellow-400 rounded-full opacity-60"
+                  style={{
+                    left: `${((resource.position[0] + 30) / 60) * 100}%`,
+                    top: `${((resource.position[2] + 30) / 60) * 100}%`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          <p className="text-gray-400 text-[10px] text-center mt-1">Mini-carte</p>
         </motion.div>
 
         {/* Swap Timer */}
@@ -600,10 +873,54 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
           <p className="text-gray-400 text-[10px] uppercase tracking-wider font-bold mb-1.5">Contrôles</p>
           <div className="space-y-0.5">
             <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">ZQSD</kbd> Déplacer</p>
+            <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">SHIFT</kbd> Sprint</p>
+            <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">ESPACE</kbd> Attaquer</p>
             <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">E</kbd> Poser piège</p>
+            <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">C</kbd> Craft</p>
             <p className="text-gray-300 text-[11px]"><kbd className="bg-gray-700 px-1.5 py-0.5 rounded text-[10px]">I</kbd> Inventaire</p>
           </div>
         </motion.div>
+
+        {/* Enemy indicators */}
+        {localPlayer && players.filter(p => p.id !== 'local' && p.isAlive).length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 pointer-events-none"
+          >
+            {players.filter(p => p.id !== 'local' && p.isAlive).map((enemy) => {
+              const dx = enemy.position[0] - localPlayer.position[0];
+              const dz = enemy.position[2] - localPlayer.position[2];
+              const distance = Math.sqrt(dx * dx + dz * dz);
+              
+              // Only show indicators for enemies within 15 units
+              if (distance > 15 || distance < 3) return null;
+              
+              const angle = Math.atan2(dx, dz);
+              const indicatorDistance = 120; // pixels from center
+              const x = Math.sin(angle) * indicatorDistance;
+              const y = Math.cos(angle) * indicatorDistance;
+              
+              return (
+                <motion.div
+                  key={enemy.id}
+                  className="absolute left-1/2 top-1/2 w-3 h-3 bg-red-500 rounded-full shadow-lg shadow-red-500/50"
+                  style={{
+                    transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+                  }}
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.6, 1, 0.6],
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                  }}
+                />
+              );
+            })}
+          </motion.div>
+        )}
 
         {/* Action buttons */}
         <motion.div
