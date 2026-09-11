@@ -139,15 +139,27 @@ export default function MainMenu() {
         </motion.button>
 
         {/* Secondary Buttons */}
-        <div className="w-full grid grid-cols-2 gap-3 mb-4">
+        <div className="w-full grid grid-cols-3 gap-3 mb-4">
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => actions.setPage('battlepass')}
+            className="py-4 px-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-yellow-500/20 transition-all"
+          >
+            🎖️ Pass
+          </motion.button>
+
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => actions.setPage('shop')}
-            className="py-4 px-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
+            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
           >
             🛒 Boutique
           </motion.button>
@@ -155,11 +167,11 @@ export default function MainMenu() {
           <motion.button
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.5 }}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => actions.setPage('profile')}
-            className="py-4 px-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
+            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
           >
             👤 Profil
           </motion.button>
