@@ -40,7 +40,7 @@ export const MAPS: MapData[] = [
       fogFar: 55,
     },
     structures: [
-      // Gratte-ciels principaux
+      // Gratte-ciels principaux - beaucoup plus détaillés
       { type: 'building', position: [12, 4, 12], size: [3, 8, 3], color: '#1a1a3a' },
       { type: 'building', position: [-12, 6, -10], size: [4, 12, 4], color: '#0f0f2a' },
       { type: 'building', position: [15, 3, -15], size: [3, 6, 5], color: '#1a0a2a' },
@@ -49,37 +49,80 @@ export const MAPS: MapData[] = [
       { type: 'building', position: [-20, 4, -5], size: [3, 8, 3], color: '#1a1a3a' },
       { type: 'building', position: [18, 5, 8], size: [4, 10, 3], color: '#0f0f2a' },
       
+      // Gratte-ciels secondaires
+      { type: 'building', position: [8, 3, -18], size: [2.5, 6, 2.5], color: '#1a1a3a' },
+      { type: 'building', position: [-8, 4, 18], size: [3, 8, 3], color: '#0f0f2a' },
+      { type: 'building', position: [22, 3, -8], size: [2, 6, 3], color: '#1a0a2a' },
+      { type: 'building', position: [-22, 3, 8], size: [2.5, 6, 2.5], color: '#0a0a2a' },
+      
       // Petits bâtiments et kiosques
       { type: 'building', position: [5, 1.5, -5], size: [2, 3, 2], color: '#2a1a3a' },
       { type: 'building', position: [-8, 2, 5], size: [3, 4, 2], color: '#1a2a3a' },
       { type: 'building', position: [20, 2, 5], size: [2, 4, 3], color: '#2a0a3a' },
       { type: 'building', position: [-5, 1, 10], size: [2, 2, 2], color: '#2a1a3a' },
       { type: 'building', position: [8, 1.5, 18], size: [2.5, 3, 2.5], color: '#1a2a3a' },
+      { type: 'building', position: [-15, 1.5, -18], size: [2, 3, 2], color: '#2a1a3a' },
+      { type: 'building', position: [15, 1.5, 20], size: [2.5, 3, 2.5], color: '#1a2a3a' },
       
-      // Murs néon lumineux
+      // Tours de communication
+      { type: 'tower', position: [25, 4, 0], size: [1.5, 8, 1.5], color: '#2a2a4a' },
+      { type: 'tower', position: [-25, 4, 0], size: [1.5, 8, 1.5], color: '#2a2a4a' },
+      { type: 'tower', position: [0, 3, 25], size: [1.2, 6, 1.2], color: '#2a2a4a' },
+      { type: 'tower', position: [0, 3, -25], size: [1.2, 6, 1.2], color: '#2a2a4a' },
+      
+      // Murs néon lumineux - beaucoup plus nombreux
       { type: 'wall', position: [0, 1, 8], size: [8, 2, 0.3], color: '#ff00ff' },
       { type: 'wall', position: [-5, 1, -8], size: [0.3, 2, 6], color: '#00ffff' },
       { type: 'wall', position: [10, 1, 0], size: [0.3, 2, 8], color: '#ff00ff' },
       { type: 'wall', position: [-10, 1, -15], size: [6, 2, 0.3], color: '#00ffff' },
+      { type: 'wall', position: [5, 1, 20], size: [6, 2, 0.3], color: '#ff00ff' },
+      { type: 'wall', position: [-20, 1, 10], size: [0.3, 2, 8], color: '#00ffff' },
+      { type: 'wall', position: [20, 1, -10], size: [0.3, 2, 8], color: '#ff00ff' },
+      { type: 'wall', position: [-15, 1, 20], size: [6, 2, 0.3], color: '#00ffff' },
       
-      // Rampes pour accès en hauteur
+      // Rampes pour accès en hauteur - plus nombreuses
       { type: 'ramp', position: [8, 0.5, 0], size: [3, 1, 4], color: '#330066' },
       { type: 'ramp', position: [-15, 0.5, 0], size: [3, 1, 4], color: '#330066' },
       { type: 'ramp', position: [0, 0.5, 15], size: [4, 1, 3], color: '#330066' },
       { type: 'ramp', position: [-8, 1, -12], size: [3, 2, 4], color: '#330066' },
+      { type: 'ramp', position: [12, 0.5, 8], size: [3, 1, 4], color: '#330066' },
+      { type: 'ramp', position: [-12, 0.5, -8], size: [3, 1, 4], color: '#330066' },
+      { type: 'ramp', position: [18, 1, -5], size: [3, 2, 4], color: '#330066' },
+      { type: 'ramp', position: [-18, 1, 5], size: [3, 2, 4], color: '#330066' },
       
-      // Plateformes surélevées
+      // Plateformes surélevées - plus nombreuses
       { type: 'platform', position: [0, 3, 0], size: [4, 0.3, 4], color: '#4a0080' },
       { type: 'platform', position: [10, 2, -10], size: [3, 0.3, 3], color: '#4a0080' },
       { type: 'platform', position: [-15, 2.5, 8], size: [3.5, 0.3, 3.5], color: '#4a0080' },
       { type: 'platform', position: [15, 1.5, 15], size: [3, 0.3, 3], color: '#4a0080' },
+      { type: 'platform', position: [-10, 2, -15], size: [3, 0.3, 3], color: '#4a0080' },
+      { type: 'platform', position: [20, 1.5, 10], size: [2.5, 0.3, 2.5], color: '#4a0080' },
+      { type: 'platform', position: [-20, 1.5, -10], size: [2.5, 0.3, 2.5], color: '#4a0080' },
+      { type: 'platform', position: [5, 2, 22], size: [3, 0.3, 3], color: '#4a0080' },
       
-      // Caisses et objets
+      // Cristaux néon - pour l'ambiance cyberpunk
+      { type: 'crystal', position: [6, 1, 6], size: [1.5, 2, 1.5], color: '#ff00ff' },
+      { type: 'crystal', position: [-6, 1, -6], size: [1.5, 2, 1.5], color: '#00ffff' },
+      { type: 'crystal', position: [14, 1, -14], size: [1.2, 1.8, 1.2], color: '#ff00ff' },
+      { type: 'crystal', position: [-14, 1, 14], size: [1.2, 1.8, 1.2], color: '#00ffff' },
+      
+      // Rochers décoratifs
+      { type: 'rock', position: [3, 0.5, 10], size: [1.5, 1, 1.5], color: '#2a2a4a' },
+      { type: 'rock', position: [-3, 0.5, -10], size: [1.5, 1, 1.5], color: '#2a2a4a' },
+      { type: 'rock', position: [10, 0.5, 3], size: [1.2, 0.8, 1.2], color: '#2a2a4a' },
+      { type: 'rock', position: [-10, 0.5, -3], size: [1.2, 0.8, 1.2], color: '#2a2a4a' },
+      
+      // Caisses et objets - beaucoup plus nombreux
       { type: 'crate', position: [3, 0.4, 3], size: [0.8, 0.8, 0.8], color: '#ff6600' },
       { type: 'crate', position: [-3, 0.4, -3], size: [0.8, 0.8, 0.8], color: '#ff6600' },
       { type: 'crate', position: [7, 0.4, -7], size: [0.8, 0.8, 0.8], color: '#ff6600' },
       { type: 'crate', position: [-12, 0.4, 12], size: [0.8, 0.8, 0.8], color: '#ff6600' },
       { type: 'crate', position: [18, 0.4, -8], size: [0.8, 0.8, 0.8], color: '#ff6600' },
+      { type: 'crate', position: [-18, 0.4, 8], size: [0.8, 0.8, 0.8], color: '#ff6600' },
+      { type: 'crate', position: [10, 0.4, 15], size: [0.8, 0.8, 0.8], color: '#ff6600' },
+      { type: 'crate', position: [-10, 0.4, -15], size: [0.8, 0.8, 0.8], color: '#ff6600' },
+      { type: 'crate', position: [22, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#ff6600' },
+      { type: 'crate', position: [-22, 0.4, -5], size: [0.8, 0.8, 0.8], color: '#ff6600' },
     ],
     resources: [
       { type: 'gold', count: 15 },
