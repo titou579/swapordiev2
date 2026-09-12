@@ -147,11 +147,18 @@ export const MAPS: MapData[] = [
       fogFar: 50,
     },
     structures: [
-      // Volcan central imposant
-      { type: 'tower', position: [0, 3, 0], size: [5, 6, 5], color: '#3d1a00' },
-      { type: 'tower', position: [2, 4, 2], size: [3, 8, 3], color: '#4a2000' },
+      // Volcan central massif avec plusieurs couches
+      { type: 'tower', position: [0, 3, 0], size: [6, 6, 6], color: '#3d1a00' },
+      { type: 'tower', position: [0, 6, 0], size: [4, 4, 4], color: '#4a2000' },
+      { type: 'tower', position: [0, 8, 0], size: [2.5, 3, 2.5], color: '#5a2a00' },
       
-      // Gros rochers volcaniques
+      // Volcans secondaires
+      { type: 'tower', position: [18, 2, 18], size: [3, 4, 3], color: '#3d1a00' },
+      { type: 'tower', position: [-18, 2, -18], size: [3, 4, 3], color: '#3d1a00' },
+      { type: 'tower', position: [18, 2.5, -15], size: [2.5, 5, 2.5], color: '#4a2000' },
+      { type: 'tower', position: [-15, 2.5, 18], size: [2.5, 5, 2.5], color: '#4a2000' },
+      
+      // Gros rochers volcaniques - beaucoup plus nombreux
       { type: 'rock', position: [10, 1, 10], size: [3, 2, 3], color: '#4a2a00' },
       { type: 'rock', position: [-12, 1.5, -8], size: [4, 3, 4], color: '#3d1a00' },
       { type: 'rock', position: [15, 0.8, -12], size: [2, 1.5, 2], color: '#4a2a00' },
@@ -161,35 +168,75 @@ export const MAPS: MapData[] = [
       { type: 'rock', position: [8, 1.5, -18], size: [3.5, 3, 3.5], color: '#4a2a00' },
       { type: 'rock', position: [-15, 1, 18], size: [2.5, 2, 2.5], color: '#3d1a00' },
       { type: 'rock', position: [18, 0.8, 15], size: [2, 1.5, 2], color: '#4a2a00' },
+      { type: 'rock', position: [-10, 1.2, -20], size: [2.5, 2.5, 2.5], color: '#3d1a00' },
+      { type: 'rock', position: [22, 1, 8], size: [2, 2, 2], color: '#4a2a00' },
+      { type: 'rock', position: [-22, 1, -8], size: [2, 2, 2], color: '#3d1a00' },
+      { type: 'rock', position: [5, 0.8, 22], size: [1.8, 1.5, 1.8], color: '#4a2a00' },
+      { type: 'rock', position: [-5, 0.8, -22], size: [1.8, 1.5, 1.8], color: '#3d1a00' },
       
-      // Ponts de pierre reliant les zones
+      // Rochers de lave incandescente
+      { type: 'crystal', position: [12, 0.5, 5], size: [1.5, 1, 1.5], color: '#ff4400' },
+      { type: 'crystal', position: [-12, 0.5, -5], size: [1.5, 1, 1.5], color: '#ff4400' },
+      { type: 'crystal', position: [5, 0.5, 15], size: [1.2, 0.8, 1.2], color: '#ff6600' },
+      { type: 'crystal', position: [-5, 0.5, -15], size: [1.2, 0.8, 1.2], color: '#ff6600' },
+      
+      // Ponts de pierre reliant les zones - réseau complet
       { type: 'wall', position: [5, 0.5, 0], size: [10, 0.5, 1.5], color: '#5a3a00' },
       { type: 'wall', position: [0, 0.5, 5], size: [1.5, 0.5, 10], color: '#5a3a00' },
       { type: 'wall', position: [-5, 0.5, 0], size: [10, 0.5, 1.5], color: '#5a3a00' },
       { type: 'wall', position: [0, 0.5, -5], size: [1.5, 0.5, 10], color: '#5a3a00' },
+      { type: 'wall', position: [10, 0.5, 10], size: [8, 0.5, 1.5], color: '#5a3a00' },
+      { type: 'wall', position: [-10, 0.5, -10], size: [8, 0.5, 1.5], color: '#5a3a00' },
+      { type: 'wall', position: [10, 0.5, -10], size: [1.5, 0.5, 8], color: '#5a3a00' },
+      { type: 'wall', position: [-10, 0.5, 10], size: [1.5, 0.5, 8], color: '#5a3a00' },
       
-      // Plateformes de lave brûlantes
+      // Plateformes de lave brûlantes - plus nombreuses
       { type: 'platform', position: [8, 0.3, -8], size: [3, 0.3, 3], color: '#ff3300' },
       { type: 'platform', position: [-8, 0.3, 8], size: [3, 0.3, 3], color: '#ff3300' },
       { type: 'platform', position: [12, 0.3, 12], size: [2.5, 0.3, 2.5], color: '#ff4400' },
       { type: 'platform', position: [-12, 0.3, -12], size: [2.5, 0.3, 2.5], color: '#ff4400' },
+      { type: 'platform', position: [15, 0.3, 0], size: [2, 0.3, 2], color: '#ff5500' },
+      { type: 'platform', position: [-15, 0.3, 0], size: [2, 0.3, 2], color: '#ff5500' },
+      { type: 'platform', position: [0, 0.3, 15], size: [2, 0.3, 2], color: '#ff5500' },
+      { type: 'platform', position: [0, 0.3, -15], size: [2, 0.3, 2], color: '#ff5500' },
       
-      // Rampes pour accéder aux hauteurs
+      // Rampes pour accéder aux hauteurs - plus nombreuses
       { type: 'ramp', position: [-5, 1, -5], size: [3, 2, 4], color: '#4a2a00' },
       { type: 'ramp', position: [5, 1, 5], size: [3, 2, 4], color: '#4a2a00' },
       { type: 'ramp', position: [-8, 0.5, 12], size: [3, 1, 4], color: '#4a2a00' },
       { type: 'ramp', position: [8, 0.5, -12], size: [3, 1, 4], color: '#4a2a00' },
+      { type: 'ramp', position: [12, 0.5, 8], size: [3, 1, 4], color: '#4a2a00' },
+      { type: 'ramp', position: [-12, 0.5, -8], size: [3, 1, 4], color: '#4a2a00' },
+      { type: 'ramp', position: [15, 1, -5], size: [3, 2, 4], color: '#4a2a00' },
+      { type: 'ramp', position: [-15, 1, 5], size: [3, 2, 4], color: '#4a2a00' },
       
-      // Colonnes de pierre
+      // Colonnes de pierre volcanique
       { type: 'tower', position: [15, 1.5, 8], size: [1.5, 3, 1.5], color: '#5a3a00' },
       { type: 'tower', position: [-15, 1.5, -8], size: [1.5, 3, 1.5], color: '#5a3a00' },
       { type: 'tower', position: [10, 1, 18], size: [1.2, 2, 1.2], color: '#5a3a00' },
+      { type: 'tower', position: [-10, 1, -18], size: [1.2, 2, 1.2], color: '#5a3a00' },
+      { type: 'tower', position: [20, 1.5, 15], size: [1.3, 3, 1.3], color: '#5a3a00' },
+      { type: 'tower', position: [-20, 1.5, -15], size: [1.3, 3, 1.3], color: '#5a3a00' },
       
-      // Caisses et ressources
+      // Murs de lave solidifiée
+      { type: 'wall', position: [8, 1, 0], size: [0.5, 2, 6], color: '#6a3a00' },
+      { type: 'wall', position: [-8, 1, 0], size: [0.5, 2, 6], color: '#6a3a00' },
+      { type: 'wall', position: [0, 1, 8], size: [6, 2, 0.5], color: '#6a3a00' },
+      { type: 'wall', position: [0, 1, -8], size: [6, 2, 0.5], color: '#6a3a00' },
+      
+      // Caisses et ressources - beaucoup plus nombreuses
       { type: 'crate', position: [3, 0.4, 8], size: [0.8, 0.8, 0.8], color: '#8b4513' },
       { type: 'crate', position: [-6, 0.4, -4], size: [0.8, 0.8, 0.8], color: '#8b4513' },
       { type: 'crate', position: [12, 0.4, -5], size: [0.8, 0.8, 0.8], color: '#8b4513' },
       { type: 'crate', position: [-10, 0.4, 10], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [18, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [-18, 0.4, -5], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [5, 0.4, 18], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [-5, 0.4, -18], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [22, 0.4, 12], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [-22, 0.4, -12], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [15, 0.4, 20], size: [0.8, 0.8, 0.8], color: '#8b4513' },
+      { type: 'crate', position: [-15, 0.4, -20], size: [0.8, 0.8, 0.8], color: '#8b4513' },
     ],
     resources: [
       { type: 'gold', count: 12 },
@@ -213,58 +260,106 @@ export const MAPS: MapData[] = [
       fogFar: 60,
     },
     structures: [
-      // Grands icebergs
+      // Grands icebergs - beaucoup plus nombreux et variés
       { type: 'crystal', position: [10, 2, 10], size: [3, 4, 3], color: '#a8d8ea' },
       { type: 'crystal', position: [-15, 3, -12], size: [4, 6, 4], color: '#87ceeb' },
       { type: 'crystal', position: [18, 1.5, -8], size: [2, 3, 2], color: '#a8d8ea' },
       { type: 'crystal', position: [-10, 2, 18], size: [3, 4, 3], color: '#87ceeb' },
       { type: 'crystal', position: [20, 2.5, 15], size: [3.5, 5, 3.5], color: '#a8d8ea' },
       { type: 'crystal', position: [-18, 2, -18], size: [3, 4, 3], color: '#87ceeb' },
+      { type: 'crystal', position: [8, 1.5, -20], size: [2.5, 3, 2.5], color: '#a8d8ea' },
+      { type: 'crystal', position: [-20, 2, 8], size: [2.5, 4, 2.5], color: '#87ceeb' },
+      { type: 'crystal', position: [22, 1.8, -15], size: [2, 3.5, 2], color: '#a8d8ea' },
+      { type: 'crystal', position: [-22, 2.2, 15], size: [2.8, 4.5, 2.8], color: '#87ceeb' },
       
-      // Igloos habitables
+      // Icebergs secondaires plus petits
+      { type: 'crystal', position: [5, 1, 15], size: [1.5, 2, 1.5], color: '#b8e8fa' },
+      { type: 'crystal', position: [-5, 1, -15], size: [1.5, 2, 1.5], color: '#b8e8fa' },
+      { type: 'crystal', position: [15, 1, 5], size: [1.8, 2.5, 1.8], color: '#b8e8fa' },
+      { type: 'crystal', position: [-15, 1, -5], size: [1.8, 2.5, 1.8], color: '#b8e8fa' },
+      
+      // Igloos habitables - plus nombreux
       { type: 'building', position: [5, 1.5, -5], size: [3, 3, 3], color: '#f0f8ff' },
       { type: 'building', position: [-8, 1.5, 8], size: [3, 3, 3], color: '#f0f8ff' },
       { type: 'building', position: [12, 1.5, 12], size: [2.5, 2.5, 2.5], color: '#f0f8ff' },
       { type: 'building', position: [-15, 1.5, -5], size: [2.5, 2.5, 2.5], color: '#f0f8ff' },
+      { type: 'building', position: [18, 1.5, -12], size: [2, 2, 2], color: '#f0f8ff' },
+      { type: 'building', position: [-18, 1.5, 12], size: [2, 2, 2], color: '#f0f8ff' },
+      { type: 'building', position: [0, 1.5, 20], size: [2.5, 2.5, 2.5], color: '#f0f8ff' },
+      { type: 'building', position: [0, 1.5, -20], size: [2.5, 2.5, 2.5], color: '#f0f8ff' },
       
-      // Murs de glace défensifs
+      // Murs de glace défensifs - réseau complet
       { type: 'wall', position: [0, 1.5, 12], size: [8, 3, 0.5], color: '#b8e0f0' },
       { type: 'wall', position: [-12, 1.5, 0], size: [0.5, 3, 8], color: '#b8e0f0' },
       { type: 'wall', position: [8, 1.5, -10], size: [6, 3, 0.5], color: '#b8e0f0' },
       { type: 'wall', position: [-8, 1.5, 15], size: [0.5, 3, 6], color: '#b8e0f0' },
+      { type: 'wall', position: [10, 1.5, 10], size: [6, 3, 0.5], color: '#b8e0f0' },
+      { type: 'wall', position: [-10, 1.5, -10], size: [6, 3, 0.5], color: '#b8e0f0' },
+      { type: 'wall', position: [10, 1.5, -10], size: [0.5, 3, 6], color: '#b8e0f0' },
+      { type: 'wall', position: [-10, 1.5, 10], size: [0.5, 3, 6], color: '#b8e0f0' },
       
-      // Plateformes gelées surélevées
+      // Plateformes gelées surélevées - plus nombreuses
       { type: 'platform', position: [0, 2, 0], size: [5, 0.4, 5], color: '#d0f0ff' },
       { type: 'platform', position: [12, 1, -12], size: [3, 0.4, 3], color: '#d0f0ff' },
       { type: 'platform', position: [-12, 1.5, 12], size: [3.5, 0.4, 3.5], color: '#d0f0ff' },
       { type: 'platform', position: [15, 0.8, 8], size: [2.5, 0.4, 2.5], color: '#d0f0ff' },
+      { type: 'platform', position: [-15, 1, -8], size: [2.5, 0.4, 2.5], color: '#d0f0ff' },
+      { type: 'platform', position: [8, 1.2, 18], size: [3, 0.4, 3], color: '#d0f0ff' },
+      { type: 'platform', position: [-8, 1.2, -18], size: [3, 0.4, 3], color: '#d0f0ff' },
+      { type: 'platform', position: [20, 0.8, 0], size: [2, 0.4, 2], color: '#d0f0ff' },
+      { type: 'platform', position: [-20, 0.8, 0], size: [2, 0.4, 2], color: '#d0f0ff' },
       
-      // Rochers enneigés
+      // Rochers enneigés - beaucoup plus nombreux
       { type: 'rock', position: [-5, 0.8, -15], size: [2, 1.5, 2], color: '#6b7b8a' },
       { type: 'rock', position: [15, 0.6, 5], size: [1.5, 1.2, 1.5], color: '#6b7b8a' },
       { type: 'rock', position: [-20, 1, 10], size: [2.5, 2, 2.5], color: '#6b7b8a' },
       { type: 'rock', position: [8, 0.8, -18], size: [2, 1.5, 2], color: '#6b7b8a' },
+      { type: 'rock', position: [12, 0.7, 15], size: [1.8, 1.3, 1.8], color: '#6b7b8a' },
+      { type: 'rock', position: [-12, 0.7, -15], size: [1.8, 1.3, 1.8], color: '#6b7b8a' },
+      { type: 'rock', position: [22, 0.9, 8], size: [2.2, 1.6, 2.2], color: '#6b7b8a' },
+      { type: 'rock', position: [-22, 0.9, -8], size: [2.2, 1.6, 2.2], color: '#6b7b8a' },
+      { type: 'rock', position: [5, 0.6, 22], size: [1.5, 1, 1.5], color: '#6b7b8a' },
+      { type: 'rock', position: [-5, 0.6, -22], size: [1.5, 1, 1.5], color: '#6b7b8a' },
       
-      // Rampes de glace
+      // Rampes de glace - plus nombreuses
       { type: 'ramp', position: [7, 0.5, 7], size: [3, 1, 4], color: '#c0e8f8' },
       { type: 'ramp', position: [-7, 0.5, -7], size: [3, 1, 4], color: '#c0e8f8' },
       { type: 'ramp', position: [10, 0.5, -5], size: [3, 1, 4], color: '#c0e8f8' },
+      { type: 'ramp', position: [-10, 0.5, 5], size: [3, 1, 4], color: '#c0e8f8' },
+      { type: 'ramp', position: [15, 0.5, 12], size: [3, 1, 4], color: '#c0e8f8' },
+      { type: 'ramp', position: [-15, 0.5, -12], size: [3, 1, 4], color: '#c0e8f8' },
+      { type: 'ramp', position: [5, 0.5, 18], size: [3, 1, 4], color: '#c0e8f8' },
+      { type: 'ramp', position: [-5, 0.5, -18], size: [3, 1, 4], color: '#c0e8f8' },
       
-      // Arbres gelés
+      // Arbres gelés - plus nombreux
       { type: 'tree', position: [-18, 1.5, 8], size: [1.5, 3, 1.5], color: '#4a6fa5' },
       { type: 'tree', position: [18, 1.5, -15], size: [1.5, 3, 1.5], color: '#4a6fa5' },
       { type: 'tree', position: [-5, 1.5, 20], size: [1.2, 2.5, 1.2], color: '#4a6fa5' },
+      { type: 'tree', position: [5, 1.5, -20], size: [1.2, 2.5, 1.2], color: '#4a6fa5' },
+      { type: 'tree', position: [-22, 1.5, -5], size: [1.3, 2.8, 1.3], color: '#4a6fa5' },
+      { type: 'tree', position: [22, 1.5, 5], size: [1.3, 2.8, 1.3], color: '#4a6fa5' },
+      { type: 'tree', position: [-10, 1.5, 22], size: [1.4, 3, 1.4], color: '#4a6fa5' },
+      { type: 'tree', position: [10, 1.5, -22], size: [1.4, 3, 1.4], color: '#4a6fa5' },
       
-      // Caisses gelées
+      // Caisses gelées - beaucoup plus nombreuses
       { type: 'crate', position: [2, 0.4, -2], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
       { type: 'crate', position: [-3, 0.4, 3], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
       { type: 'crate', position: [10, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
       { type: 'crate', position: [-10, 0.4, -8], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [15, 0.4, 10], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [-15, 0.4, -10], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [8, 0.4, 18], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [-8, 0.4, -18], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [20, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [-20, 0.4, -5], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [5, 0.4, 22], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
+      { type: 'crate', position: [-5, 0.4, -22], size: [0.8, 0.8, 0.8], color: '#4a6fa5' },
     ],
     resources: [
-      { type: 'gold', count: 10 },
-      { type: 'gem', count: 12 },
-      { type: 'wood', count: 15 },
+      { type: 'gold', count: 12 },
+      { type: 'gem', count: 15 },
+      { type: 'wood', count: 18 },
+      { type: 'stone', count: 10 },
     ],
     difficulty: 'facile',
     players: '2-9',
@@ -332,17 +427,49 @@ export const MAPS: MapData[] = [
       { type: 'platform', position: [15, 1, 10], size: [2.5, 0.3, 2.5], color: '#8b7355' },
       { type: 'platform', position: [-15, 1, -10], size: [2.5, 0.3, 2.5], color: '#8b7355' },
       
-      // Caisses de trésor
+      // Caisses de trésor - beaucoup plus nombreuses
       { type: 'crate', position: [3, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#8b6914' },
       { type: 'crate', position: [-4, 0.4, -3], size: [0.8, 0.8, 0.8], color: '#8b6914' },
       { type: 'crate', position: [12, 0.4, 8], size: [0.8, 0.8, 0.8], color: '#8b6914' },
       { type: 'crate', position: [-12, 0.4, -8], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [18, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [-18, 0.4, -5], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [5, 0.4, 18], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [-5, 0.4, -18], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [22, 0.4, 12], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [-22, 0.4, -12], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [15, 0.4, 20], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      { type: 'crate', position: [-15, 0.4, -20], size: [0.8, 0.8, 0.8], color: '#8b6914' },
+      
+      // Arbres supplémentaires
+      { type: 'tree', position: [8, 1.8, -18], size: [1, 3.5, 1], color: '#2d5a27' },
+      { type: 'tree', position: [-8, 1.8, 18], size: [1, 3.5, 1], color: '#2d5a27' },
+      { type: 'tree', position: [22, 2, 0], size: [1.1, 4, 1.1], color: '#2d5a27' },
+      { type: 'tree', position: [-22, 2, 0], size: [1.1, 4, 1.1], color: '#2d5a27' },
+      
+      // Rochers supplémentaires
+      { type: 'rock', position: [20, 0.9, -8], size: [2, 1.6, 2], color: '#4a6a3a' },
+      { type: 'rock', position: [-20, 0.9, 8], size: [2, 1.6, 2], color: '#3a5a2a' },
+      { type: 'rock', position: [8, 0.7, 22], size: [1.7, 1.4, 1.7], color: '#4a6a3a' },
+      { type: 'rock', position: [-8, 0.7, -22], size: [1.7, 1.4, 1.7], color: '#3a5a2a' },
+      
+      // Rampes supplémentaires
+      { type: 'ramp', position: [10, 0.5, -10], size: [3, 1, 4], color: '#6b5a3a' },
+      { type: 'ramp', position: [-10, 0.5, 10], size: [3, 1, 4], color: '#6b5a3a' },
+      { type: 'ramp', position: [15, 0.5, 15], size: [3, 1, 4], color: '#6b5a3a' },
+      { type: 'ramp', position: [-15, 0.5, -15], size: [3, 1, 4], color: '#6b5a3a' },
+      
+      // Plateformes supplémentaires
+      { type: 'platform', position: [18, 1.2, -12], size: [2.5, 0.3, 2.5], color: '#8b7355' },
+      { type: 'platform', position: [-18, 1.2, 12], size: [2.5, 0.3, 2.5], color: '#8b7355' },
+      { type: 'platform', position: [0, 1.5, 18], size: [3, 0.3, 3], color: '#8b7355' },
+      { type: 'platform', position: [0, 1.5, -18], size: [3, 0.3, 3], color: '#8b7355' },
     ],
     resources: [
-      { type: 'gold', count: 18 },
-      { type: 'gem', count: 8 },
-      { type: 'wood', count: 12 },
-      { type: 'stone', count: 10 },
+      { type: 'gold', count: 20 },
+      { type: 'gem', count: 10 },
+      { type: 'wood', count: 15 },
+      { type: 'stone', count: 12 },
     ],
     difficulty: 'moyen',
     players: '2-9',
@@ -417,16 +544,60 @@ export const MAPS: MapData[] = [
       { type: 'ramp', position: [10, 0.5, -10], size: [2, 1, 3], color: '#4a4a6a' },
       { type: 'ramp', position: [-10, 0.5, 10], size: [2, 1, 3], color: '#4a4a6a' },
       
-      // Caisses de ravitaillement
+      // Caisses de ravitaillement - beaucoup plus nombreuses
       { type: 'crate', position: [4, 0.4, 4], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
       { type: 'crate', position: [-4, 0.4, -4], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
       { type: 'crate', position: [12, 0.4, 12], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
       { type: 'crate', position: [-12, 0.4, -12], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [18, 0.4, 5], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [-18, 0.4, -5], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [5, 0.4, 18], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [-5, 0.4, -18], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [22, 0.4, 12], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [-22, 0.4, -12], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [15, 0.4, 20], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      { type: 'crate', position: [-15, 0.4, -20], size: [0.8, 0.8, 0.8], color: '#6a6a8a' },
+      
+      // Modules supplémentaires
+      { type: 'building', position: [22, 1, 0], size: [2, 2, 2], color: '#2a2a4a' },
+      { type: 'building', position: [-22, 1, 0], size: [2, 2, 2], color: '#2a2a4a' },
+      { type: 'building', position: [0, 1, 22], size: [2, 2, 2], color: '#2a2a4a' },
+      { type: 'building', position: [0, 1, -22], size: [2, 2, 2], color: '#2a2a4a' },
+      
+      // Tours supplémentaires
+      { type: 'tower', position: [22, 2, 8], size: [0.8, 4, 0.8], color: '#3a3a5a' },
+      { type: 'tower', position: [-22, 2, -8], size: [0.8, 4, 0.8], color: '#3a3a5a' },
+      { type: 'tower', position: [8, 2, 22], size: [0.8, 4, 0.8], color: '#3a3a5a' },
+      { type: 'tower', position: [-8, 2, -22], size: [0.8, 4, 0.8], color: '#3a3a5a' },
+      
+      // Cristaux d'énergie supplémentaires
+      { type: 'crystal', position: [20, 1.5, 10], size: [1, 2, 1], color: '#00ffff' },
+      { type: 'crystal', position: [-20, 1.5, -10], size: [1, 2, 1], color: '#ff00ff' },
+      { type: 'crystal', position: [10, 1.5, 20], size: [1, 2, 1], color: '#ffff00' },
+      { type: 'crystal', position: [-10, 1.5, -20], size: [1, 2, 1], color: '#00ff00' },
+      
+      // Plateformes supplémentaires
+      { type: 'platform', position: [0, 2, 20], size: [2.5, 0.3, 2.5], color: '#3a3a6a' },
+      { type: 'platform', position: [0, 2, -20], size: [2.5, 0.3, 2.5], color: '#3a3a6a' },
+      { type: 'platform', position: [20, 2, 0], size: [2.5, 0.3, 2.5], color: '#3a3a6a' },
+      { type: 'platform', position: [-20, 2, 0], size: [2.5, 0.3, 2.5], color: '#3a3a6a' },
+      
+      // Rampes supplémentaires
+      { type: 'ramp', position: [15, 0.5, 15], size: [2, 1, 3], color: '#4a4a6a' },
+      { type: 'ramp', position: [-15, 0.5, -15], size: [2, 1, 3], color: '#4a4a6a' },
+      { type: 'ramp', position: [15, 0.5, -15], size: [2, 1, 3], color: '#4a4a6a' },
+      { type: 'ramp', position: [-15, 0.5, 15], size: [2, 1, 3], color: '#4a4a6a' },
+      
+      // Passerelles supplémentaires
+      { type: 'wall', position: [10, 0.5, 10], size: [6, 0.3, 1.5], color: '#4a4a6a' },
+      { type: 'wall', position: [-10, 0.5, -10], size: [6, 0.3, 1.5], color: '#4a4a6a' },
+      { type: 'wall', position: [10, 0.5, -10], size: [1.5, 0.3, 6], color: '#4a4a6a' },
+      { type: 'wall', position: [-10, 0.5, 10], size: [1.5, 0.3, 6], color: '#4a4a6a' },
     ],
     resources: [
-      { type: 'gold', count: 8 },
-      { type: 'gem', count: 15 },
-      { type: 'stone', count: 10 },
+      { type: 'gold', count: 10 },
+      { type: 'gem', count: 18 },
+      { type: 'stone', count: 12 },
     ],
     difficulty: 'difficile',
     players: '2-9',

@@ -103,77 +103,186 @@ export default function MainMenu() {
           transition={{ delay: 0.2 }}
           className="w-full flex items-center gap-4 mb-8 bg-white/5 backdrop-blur-xl rounded-2xl px-5 py-4 border border-white/10"
         >
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('profile')}
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform"
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20"
           >
             {user?.avatar || '🎮'}
-          </button>
+          </motion.button>
           <div className="flex-1 min-w-0">
             <p className="text-white font-bold truncate">{user?.username || 'Joueur'}</p>
             <div className="flex items-center gap-3 text-xs mt-0.5">
-              <span className="text-yellow-400 font-medium">💰 {user?.gold || 200}</span>
-              <span className="text-blue-400 font-medium">💎 {user?.gems || 10}</span>
-              <span className="text-purple-400 font-medium">🎟️ {user?.tokens || 5}</span>
+              <motion.span 
+                className="text-yellow-400 font-medium"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                💰 {user?.gold || 200}
+              </motion.span>
+              <motion.span 
+                className="text-blue-400 font-medium"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+              >
+                💎 {user?.gems || 10}
+              </motion.span>
+              <motion.span 
+                className="text-purple-400 font-medium"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+              >
+                🎟️ {user?.tokens || 5}
+              </motion.span>
             </div>
           </div>
-          <button
+          <motion.button
+            whileHover={{ x: 5 }}
             onClick={() => actions.setPage('profile')}
             className="text-gray-400 hover:text-white text-sm transition-colors"
           >
             →
-          </button>
+          </motion.button>
         </motion.div>
 
-        {/* Main Play Button */}
+        {/* Main Play Button with enhanced animation */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, type: 'spring' }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ 
+            scale: 1.05,
+            boxShadow: '0 20px 40px -10px rgba(34, 197, 94, 0.5)',
+          }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setShowModeSelect(true)}
-          className="w-full py-5 px-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl text-white text-xl font-black shadow-lg shadow-green-500/25 transition-all border border-white/10 mb-4"
+          className="w-full py-5 px-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl text-white text-xl font-black shadow-lg shadow-green-500/25 transition-all border border-white/10 mb-4 relative overflow-hidden group"
         >
-          🎮 JOUER
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            animate={{
+              x: ['-100%', '100%'],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            <motion.span
+              animate={{
+                rotate: [0, 10, -10, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              🎮
+            </motion.span>
+            JOUER
+          </span>
         </motion.button>
 
-        {/* Secondary Buttons */}
+        {/* Secondary Buttons with enhanced animations */}
         <div className="w-full grid grid-cols-3 gap-3 mb-4">
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: '0 10px 30px -5px rgba(234, 179, 8, 0.3)',
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('battlepass')}
-            className="py-4 px-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-yellow-500/20 transition-all"
+            className="py-4 px-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-yellow-500/20 transition-all relative overflow-hidden group"
           >
-            🎖️ Pass
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="relative z-10 flex flex-col items-center gap-1">
+              <motion.span
+                animate={{
+                  y: [0, -3, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                🎖️
+              </motion.span>
+              <span className="text-sm">Pass</span>
+            </span>
           </motion.button>
 
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: '0 10px 30px -5px rgba(168, 85, 247, 0.3)',
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('shop')}
-            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
+            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all relative overflow-hidden group"
           >
-            🛒 Boutique
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="relative z-10 flex flex-col items-center gap-1">
+              <motion.span
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                🛒
+              </motion.span>
+              <span className="text-sm">Boutique</span>
+            </span>
           </motion.button>
 
           <motion.button
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: '0 10px 30px -5px rgba(59, 130, 246, 0.3)',
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('profile')}
-            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
+            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all relative overflow-hidden group"
           >
-            👤 Profil
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="relative z-10 flex flex-col items-center gap-1">
+              <motion.span
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                👤
+              </motion.span>
+              <span className="text-sm">Profil</span>
+            </span>
           </motion.button>
         </div>
 

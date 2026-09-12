@@ -3,6 +3,14 @@ import { MAPS, getMapById } from '../data/maps';
 import { userStorage, UserAccount } from '../utils/userStorage';
 import { battlePassActions } from './battlePassStore';
 
+export interface PowerUp {
+  id: string;
+  type: 'speed' | 'damage' | 'shield' | 'heal' | 'jump';
+  position: [number, number, number];
+  collected: boolean;
+  duration: number;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -27,6 +35,10 @@ export interface Player {
   outfitColor?: string;
   hairColor?: string;
   skinColor?: string;
+  activePowerUps?: {
+    type: string;
+    expiresAt: number;
+  }[];
 }
 
 export interface LobbyPlayer {
@@ -114,6 +126,7 @@ interface GameState {
   localPlayer: Player | null;
   traps: Trap[];
   resources: Resource[];
+  powerUps: PowerUp[];
   swapTimer: number;
   gameStatus: 'lobby' | 'playing' | 'swapping' | 'ended';
   roundNumber: number;
@@ -179,6 +192,23 @@ const generateResources = (mapId: string): Resource[] => {
   });
   
   return resources;
+};
+
+const generatePowerUps = (): PowerUp[] => {
+  const powerUps: PowerUp[] = [];
+  const types: PowerUp['type'][] = ['speed', 'damage', 'shield', 'heal', 'jump'];
+  
+  for (let i = 0; i < 8; i++) {
+    powerUps.push({
+      id: `powerup-${i}`,
+      type: types[Math.floor(Math.random() * types.length)],
+      position: [Math.random() * 50 - 25, 0.5, Math.random() * 50 - 25],
+      collected: false,
+      duration: 10, // 10 seconds
+    });
+  }
+  
+  return powerUps;
 };
 
 const CRAFT_RECIPES: CraftRecipe[] = [
@@ -289,6 +319,7 @@ const initialState: GameState = {
   localPlayer: null,
   traps: [],
   resources: [],
+  powerUps: [],
   swapTimer: 90,
   gameStatus: 'lobby',
   roundNumber: 1,
@@ -363,24 +394,29 @@ export const actions = {
 
   // Login with OAuth (simulated)
   loginWithOAuth(provider: 'google' | 'apple' | 'discord') {
-    const emails: Record<string, string> = {
-      google: 'user@gmail.com',
-      apple: 'user@icloud.com',
-      discord: 'user@discord.com',
-    };
-    const usernames: Record<string, string> = {
-      google: 'GooglePlayer',
-      apple: 'ApplePlayer',
-      discord: 'DiscordGamer',
-    };
-    
-    const user = userStorage.loginWithOAuth(provider, emails[provider], usernames[provider]);
-    setState({
-      isAuthenticated: true,
-      user,
-      isAdmin: user.email === 'admin@swapordie.com',
-      currentPage: 'menu',
-    });
+    try {
+      const emails: Record<string, string> = {
+        google: 'user@gmail.com',
+        apple: 'user@icloud.com',
+        discord: 'user@discord.com',
+      };
+      const usernames: Record<string, string> = {
+        google: 'GooglePlayer',
+        apple: 'ApplePlayer',
+        discord: 'DiscordGamer',
+      };
+      
+      const user = userStorage.loginWithOAuth(provider, emails[provider], usernames[provider]);
+      setState({
+        isAuthenticated: true,
+        user,
+        isAdmin: user.email === 'admin@swapordie.com',
+        currentPage: 'menu',
+      });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
   },
 
   logout() {
@@ -569,6 +605,7 @@ export const actions = {
       players: gamePlayers,
       localPlayer,
       resources: generateResources(mapId),
+      powerUps: generatePowerUps(),
       traps: [],
       swapTimer: 90,
       gameStatus: 'playing',
@@ -679,6 +716,34 @@ export const actions = {
 
     // Update battle pass quest progress
     battlePassActions.updateQuestProgress('daily-2', 1); // Collecteur
+  },
+
+  collectPowerUp(powerUpId: string) {
+    const powerUp = state.powerUps.find(p => p.id === powerUpId);
+    if (!powerUp || powerUp.collected || !state.localPlayer) return;
+
+    const newPowerUps = state.powerUps.map(p => p.id === powerUpId ? { ...p, collected: true } : p);
+    const newLocal = { ...state.localPlayer };
+
+    // Apply power-up effect
+    const activePowerUps = newLocal.activePowerUps || [];
+    const expiresAt = Date.now() + powerUp.duration * 1000;
+
+    switch (powerUp.type) {
+      case 'heal':
+        newLocal.health = Math.min(newLocal.maxHealth, newLocal.health + 30);
+        break;
+      case 'speed':
+      case 'damage':
+      case 'shield':
+      case 'jump':
+        activePowerUps.push({ type: powerUp.type, expiresAt });
+        break;
+    }
+
+    newLocal.activePowerUps = activePowerUps;
+    const newPlayers = state.players.map(p => p.id === 'local' ? newLocal : p);
+    setState({ powerUps: newPowerUps, localPlayer: newLocal, players: newPlayers });
   },
 
   placeTrap(trapData: Omit<Trap, 'id' | 'isActive' | 'triggered'>) {
