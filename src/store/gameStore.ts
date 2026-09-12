@@ -394,24 +394,29 @@ export const actions = {
 
   // Login with OAuth (simulated)
   loginWithOAuth(provider: 'google' | 'apple' | 'discord') {
-    const emails: Record<string, string> = {
-      google: 'user@gmail.com',
-      apple: 'user@icloud.com',
-      discord: 'user@discord.com',
-    };
-    const usernames: Record<string, string> = {
-      google: 'GooglePlayer',
-      apple: 'ApplePlayer',
-      discord: 'DiscordGamer',
-    };
-    
-    const user = userStorage.loginWithOAuth(provider, emails[provider], usernames[provider]);
-    setState({
-      isAuthenticated: true,
-      user,
-      isAdmin: user.email === 'admin@swapordie.com',
-      currentPage: 'menu',
-    });
+    try {
+      const emails: Record<string, string> = {
+        google: 'user@gmail.com',
+        apple: 'user@icloud.com',
+        discord: 'user@discord.com',
+      };
+      const usernames: Record<string, string> = {
+        google: 'GooglePlayer',
+        apple: 'ApplePlayer',
+        discord: 'DiscordGamer',
+      };
+      
+      const user = userStorage.loginWithOAuth(provider, emails[provider], usernames[provider]);
+      setState({
+        isAuthenticated: true,
+        user,
+        isAdmin: user.email === 'admin@swapordie.com',
+        currentPage: 'menu',
+      });
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
   },
 
   logout() {

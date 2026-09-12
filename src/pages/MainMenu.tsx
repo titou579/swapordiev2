@@ -103,26 +103,47 @@ export default function MainMenu() {
           transition={{ delay: 0.2 }}
           className="w-full flex items-center gap-4 mb-8 bg-white/5 backdrop-blur-xl rounded-2xl px-5 py-4 border border-white/10"
         >
-          <button
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('profile')}
-            className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20 hover:scale-105 transition-transform"
+            className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20"
           >
             {user?.avatar || '🎮'}
-          </button>
+          </motion.button>
           <div className="flex-1 min-w-0">
             <p className="text-white font-bold truncate">{user?.username || 'Joueur'}</p>
             <div className="flex items-center gap-3 text-xs mt-0.5">
-              <span className="text-yellow-400 font-medium">💰 {user?.gold || 200}</span>
-              <span className="text-blue-400 font-medium">💎 {user?.gems || 10}</span>
-              <span className="text-purple-400 font-medium">🎟️ {user?.tokens || 5}</span>
+              <motion.span 
+                className="text-yellow-400 font-medium"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                💰 {user?.gold || 200}
+              </motion.span>
+              <motion.span 
+                className="text-blue-400 font-medium"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+              >
+                💎 {user?.gems || 10}
+              </motion.span>
+              <motion.span 
+                className="text-purple-400 font-medium"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+              >
+                🎟️ {user?.tokens || 5}
+              </motion.span>
             </div>
           </div>
-          <button
+          <motion.button
+            whileHover={{ x: 5 }}
             onClick={() => actions.setPage('profile')}
             className="text-gray-400 hover:text-white text-sm transition-colors"
           >
             →
-          </button>
+          </motion.button>
         </motion.div>
 
         {/* Main Play Button with enhanced animation */}

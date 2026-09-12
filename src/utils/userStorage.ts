@@ -87,6 +87,12 @@ export const userStorage = {
     if (!user) {
       // Create new user
       user = this.createUser(email, '', username, provider);
+    } else {
+      // Update provider if different
+      if (user.provider !== provider) {
+        user.provider = provider;
+        this.saveUsers(users);
+      }
     }
     
     localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
