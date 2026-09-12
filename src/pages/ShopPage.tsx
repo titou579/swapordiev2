@@ -197,41 +197,104 @@ export default function ShopPage() {
           ))}
         </div>
 
-        {/* Items Grid */}
+        {/* Items Grid with enhanced animations */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
           {filteredItems.map((item, i) => (
             <motion.div
               key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              whileHover={{ scale: 1.03, y: -3 }}
+              initial={{ opacity: 0, y: 20, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: i * 0.03, type: 'spring', stiffness: 100 }}
+              whileHover={{ 
+                scale: 1.05, 
+                y: -5,
+                boxShadow: item.rarity === 'legendary' 
+                  ? '0 20px 40px -10px rgba(234, 179, 8, 0.4)' 
+                  : item.rarity === 'epic'
+                  ? '0 20px 40px -10px rgba(168, 85, 247, 0.4)'
+                  : item.rarity === 'rare'
+                  ? '0 20px 40px -10px rgba(59, 130, 246, 0.4)'
+                  : '0 10px 20px -5px rgba(0, 0, 0, 0.3)'
+              }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setSelectedItem(item)}
-              className={`cursor-pointer rounded-2xl p-3 border-2 transition-all ${rarityColors[item.rarity]} hover:shadow-lg`}
+              className={`cursor-pointer rounded-2xl p-3 border-2 transition-all relative overflow-hidden group ${rarityColors[item.rarity]}`}
             >
-              <div className="text-center">
+              {/* Rarity glow effect */}
+              {item.rarity === 'legendary' && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-orange-500/10"
+                  animate={{
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+              {item.rarity === 'epic' && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"
+                  animate={{
+                    opacity: [0.2, 0.5, 0.2],
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+              
+              <div className="text-center relative z-10">
                 <motion.div
                   className="text-4xl mb-2"
-                  whileHover={{ scale: 1.2, rotate: 10 }}
+                  whileHover={{ scale: 1.3, rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 0.5 }}
+                  animate={item.rarity === 'legendary' ? {
+                    y: [0, -3, 0],
+                  } : {}}
                 >
                   {item.image}
                 </motion.div>
                 <h3 className="text-white font-bold text-xs truncate">{item.name}</h3>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    item.rarity === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
-                    item.rarity === 'epic' ? 'bg-purple-500/20 text-purple-400' :
-                    item.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
-                    'bg-gray-500/20 text-gray-400'
-                  }`}>
+                  <motion.span 
+                    className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      item.rarity === 'legendary' ? 'bg-yellow-500/20 text-yellow-400' :
+                      item.rarity === 'epic' ? 'bg-purple-500/20 text-purple-400' :
+                      item.rarity === 'rare' ? 'bg-blue-500/20 text-blue-400' :
+                      'bg-gray-500/20 text-gray-400'
+                    }`}
+                    whileHover={{ scale: 1.1 }}
+                  >
                     {rarityLabels[item.rarity]}
-                  </span>
-                  <span className="text-white font-bold text-xs">
+                  </motion.span>
+                  <motion.span 
+                    className="text-white font-bold text-xs"
+                    animate={{
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
                     {currencyIcons[item.currency]}{item.price}
-                  </span>
+                  </motion.span>
                 </div>
                 {item.owned && (
-                  <div className="mt-1.5 text-green-400 text-[10px] font-bold">✓ Possédé</div>
+                  <motion.div 
+                    className="mt-1.5 text-green-400 text-[10px] font-bold"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                  >
+                    ✓ Possédé
+                  </motion.div>
                 )}
               </div>
             </motion.div>

@@ -75,18 +75,64 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0015] via-[#1a0033] to-[#0a0015] relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Gradient orbs */}
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-pink-600/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }} />
+        {/* Gradient orbs with enhanced animation */}
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.3, 0.2],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-pink-600/15 rounded-full blur-[100px]"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+        />
+        <motion.div 
+          className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-blue-600/10 rounded-full blur-[80px]"
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
         
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
-          backgroundSize: '50px 50px'
-        }} />
+        {/* Grid pattern with animation */}
+        <motion.div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '50px 50px'
+          }}
+          animate={{
+            backgroundPosition: ['0px 0px', '50px 50px'],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
 
-        {/* Floating particles */}
+        {/* Floating particles with enhanced animation */}
         {Array.from({ length: 30 }).map((_, i) => (
           <motion.div
             key={i}
@@ -114,14 +160,28 @@ export default function LoginPage() {
         transition={{ duration: 0.6, type: 'spring' }}
         className="relative z-10 w-full max-w-md px-6"
       >
-        {/* Logo */}
+        {/* Logo with enhanced animation */}
         <div className="text-center mb-8">
           <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
+            initial={{ scale: 0.8, rotateY: -180 }}
+            animate={{ scale: 1, rotateY: 0 }}
+            transition={{ delay: 0.2, type: 'spring', duration: 0.8 }}
           >
-            <h1 className="text-5xl font-black tracking-tight">
+            <motion.h1 
+              className="text-5xl font-black tracking-tight"
+              animate={{
+                textShadow: [
+                  '0 0 20px rgba(168, 85, 247, 0.5)',
+                  '0 0 40px rgba(168, 85, 247, 0.8)',
+                  '0 0 20px rgba(168, 85, 247, 0.5)',
+                ],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-red-400">
                 SWAP
               </span>
@@ -129,37 +189,103 @@ export default function LoginPage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-pink-400 to-purple-400">
                 DIE
               </span>
-            </h1>
-            <p className="text-gray-400 mt-2 text-sm tracking-wider uppercase">
+            </motion.h1>
+            <motion.p 
+              className="text-gray-400 mt-2 text-sm tracking-wider uppercase"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
               Échange ta position ou meurs
-            </p>
+            </motion.p>
           </motion.div>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl shadow-purple-500/10">
-          {/* Tabs */}
+        {/* Login Card with enhanced animation */}
+        <motion.div 
+          className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl shadow-purple-500/10"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, type: 'spring', duration: 0.6 }}
+          whileHover={{ 
+            boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.25)',
+            borderColor: 'rgba(168, 85, 247, 0.3)'
+          }}
+        >
+          {/* Tabs with enhanced animation */}
           <div className="flex gap-1 bg-black/30 rounded-xl p-1 mb-6">
-            <button
+            <motion.button
               onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all relative overflow-hidden ${
                 mode === 'login'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Connexion
-            </button>
-            <button
+              {mode === 'login' && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"
+                  layoutId="activeTab"
+                  transition={{ type: 'spring', duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10">Connexion</span>
+              {mode === 'login' && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg"
+                  animate={{
+                    boxShadow: [
+                      '0 0 20px rgba(168, 85, 247, 0.5)',
+                      '0 0 30px rgba(168, 85, 247, 0.8)',
+                      '0 0 20px rgba(168, 85, 247, 0.5)',
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+            </motion.button>
+            <motion.button
               onClick={() => { setMode('register'); setError(''); }}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all relative overflow-hidden ${
                 mode === 'register'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                  ? 'text-white'
                   : 'text-gray-400 hover:text-white'
               }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Inscription
-            </button>
+              {mode === 'register' && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg"
+                  layoutId="activeTab"
+                  transition={{ type: 'spring', duration: 0.6 }}
+                />
+              )}
+              <span className="relative z-10">Inscription</span>
+              {mode === 'register' && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg shadow-lg"
+                  animate={{
+                    boxShadow: [
+                      '0 0 20px rgba(168, 85, 247, 0.5)',
+                      '0 0 30px rgba(168, 85, 247, 0.8)',
+                      '0 0 20px rgba(168, 85, 247, 0.5)',
+                    ],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                />
+              )}
+            </motion.button>
           </div>
 
           {/* OAuth Buttons */}
@@ -302,7 +428,7 @@ export default function LoginPage() {
               Mot de passe oublié ?
             </button>
           )}
-        </div>
+        </motion.div>
 
         {/* Footer */}
         <p className="text-center text-gray-600 text-xs mt-6">

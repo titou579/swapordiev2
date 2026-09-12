@@ -61,17 +61,29 @@ function Boundaries() {
   );
 }
 
-// Resource 3D Component
+// Resource 3D Component with enhanced visual effects
 function ResourceMesh({ resource, onCollect }: { resource: Resource; onCollect: () => void }) {
   const meshRef = useRef<THREE.Mesh>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
   const localPlayer = useGameStore(s => s.localPlayer);
   const collectedRef = useRef(false);
 
   useFrame((state) => {
     if (meshRef.current && !resource.collected) {
+      // Floating animation
       meshRef.current.position.y = resource.position[1] + Math.sin(state.clock.elapsedTime * 3 + resource.position[0]) * 0.25 + 0.4;
       meshRef.current.rotation.y = state.clock.elapsedTime * 2;
       meshRef.current.rotation.x = state.clock.elapsedTime * 0.5;
+      
+      // Scale pulse
+      const scale = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.1;
+      meshRef.current.scale.setScalar(scale);
+    }
+    
+    if (glowRef.current && !resource.collected) {
+      glowRef.current.position.y = resource.position[1] + Math.sin(state.clock.elapsedTime * 3 + resource.position[0]) * 0.25 + 0.4;
+      const glowScale = 1.5 + Math.sin(state.clock.elapsedTime * 2) * 0.3;
+      glowRef.current.scale.setScalar(glowScale);
     }
   });
 
@@ -104,18 +116,40 @@ function ResourceMesh({ resource, onCollect }: { resource: Resource; onCollect: 
 
   return (
     <group>
+      {/* Glow effect */}
+      <mesh ref={glowRef} position={[resource.position[0], resource.position[1] + 0.4, resource.position[2]]}>
+        <sphereGeometry args={[0.4, 16, 16]} />
+        <meshBasicMaterial
+          color={colors[resource.type]}
+          transparent
+          opacity={0.2}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+      
+      {/* Main resource */}
       <mesh ref={meshRef} position={[resource.position[0], resource.position[1], resource.position[2]]} castShadow>
         <octahedronGeometry args={[0.25]} />
         <meshStandardMaterial
           color={colors[resource.type]}
           emissive={emissiveColors[resource.type]}
-          emissiveIntensity={0.6}
-          metalness={0.8}
-          roughness={0.2}
+          emissiveIntensity={0.8}
+          metalness={0.9}
+          roughness={0.1}
         />
       </mesh>
+      
+      {/* Enhanced point light */}
       <pointLight
         position={[resource.position[0], resource.position[1] + 0.5, resource.position[2]]}
+        color={colors[resource.type]}
+        intensity={2}
+        distance={3}
+      />
+      
+      {/* Secondary light for more glow */}
+      <pointLight
+        position={[resource.position[0], resource.position[1] + 0.3, resource.position[2]]}
         color={colors[resource.type]}
         intensity={1}
         distance={2}
@@ -124,40 +158,99 @@ function ResourceMesh({ resource, onCollect }: { resource: Resource; onCollect: 
   );
 }
 
-// Trap 3D Component
+// Trap 3D Component with enhanced visual effects
 function TrapMesh({ trap }: { trap: TrapType }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const ringRef = useRef<THREE.Mesh>(null);
+  const innerRingRef = useRef<THREE.Mesh>(null);
+  const particlesRef = useRef<THREE.Points>(null);
 
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y = state.clock.elapsedTime * 4;
+      meshRef.current.rotation.x = state.clock.elapsedTime * 2;
       meshRef.current.position.y = 0.4 + Math.sin(state.clock.elapsedTime * 5) * 0.1;
     }
     if (ringRef.current) {
       ringRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2) * 0.2);
+      ringRef.current.rotation.z = state.clock.elapsedTime * 0.5;
+    }
+    if (innerRingRef.current) {
+      innerRingRef.current.scale.setScalar(0.8 + Math.sin(state.clock.elapsedTime * 3) * 0.15);
+      innerRingRef.current.rotation.z = -state.clock.elapsedTime * 0.8;
+    }
+    if (particlesRef.current) {
+      particlesRef.current.rotation.y = state.clock.elapsedTime * 2;
     }
   });
 
   if (!trap.isActive) return null;
 
+  // Create particle positions for trap effect
+  const particleCount = 20;
+  const particlePositions = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2;
+    const radius = 0.6 + Math.random() * 0.2;
+    particlePositions[i * 3] = Math.cos(angle) * radius;
+    particlePositions[i * 3 + 1] = 0.4 + Math.random() * 0.2;
+    particlePositions[i * 3 + 2] = Math.sin(angle) * radius;
+  }
+
   return (
     <group position={[trap.position[0], 0, trap.position[2]]}>
+      {/* Outer ring */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+        <ringGeometry args={[0.7, 1.0, 32]} />
+        <meshBasicMaterial color="#ff0066" transparent opacity={0.2} side={THREE.DoubleSide} />
+      </mesh>
+      
+      {/* Inner ring */}
+      <mesh ref={innerRingRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+        <ringGeometry args={[0.4, 0.6, 32]} />
+        <meshBasicMaterial color="#ff3399" transparent opacity={0.3} side={THREE.DoubleSide} />
+      </mesh>
+      
+      {/* Main trap body */}
       <mesh ref={meshRef}>
-        <torusGeometry args={[0.5, 0.08, 8, 24]} />
+        <torusGeometry args={[0.5, 0.08, 12, 32]} />
         <meshStandardMaterial
           color="#ff0066"
           emissive="#ff0033"
-          emissiveIntensity={1}
-          metalness={0.9}
-          roughness={0.1}
+          emissiveIntensity={1.2}
+          metalness={0.95}
+          roughness={0.05}
         />
       </mesh>
-      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
-        <ringGeometry args={[0.7, 1.0, 32]} />
-        <meshBasicMaterial color="#ff0066" transparent opacity={0.15} />
+      
+      {/* Particles around trap */}
+      <points ref={particlesRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={particleCount}
+            array={particlePositions}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.08}
+          color="#ff0066"
+          transparent
+          opacity={0.8}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      
+      {/* Enhanced lighting */}
+      <pointLight color="#ff0066" intensity={5} distance={5} />
+      <pointLight color="#ff3399" intensity={2} distance={3} position={[0, 0.5, 0]} />
+      
+      {/* Ground glow */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+        <circleGeometry args={[1.2, 32]} />
+        <meshBasicMaterial color="#ff0066" transparent opacity={0.1} />
       </mesh>
-      <pointLight color="#ff0066" intensity={4} distance={4} />
     </group>
   );
 }
@@ -201,22 +294,29 @@ function Particles({ color }: { color: string }) {
   );
 }
 
-// Impact particles for combat
+// Impact particles for combat with enhanced effects
 function ImpactParticles({ position, color = '#ff0000' }: { position: [number, number, number]; color?: string }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const count = 20;
+  const count = 30;
   const positions = new Float32Array(count * 3);
   const velocities = useRef<Float32Array>(new Float32Array(count * 3));
   const life = useRef(1);
+  const colors = new Float32Array(count * 3);
 
   useEffect(() => {
-    // Initialize velocities
+    // Initialize velocities and colors
     for (let i = 0; i < count; i++) {
-      velocities.current[i * 3] = (Math.random() - 0.5) * 0.3;
-      velocities.current[i * 3 + 1] = Math.random() * 0.3;
-      velocities.current[i * 3 + 2] = (Math.random() - 0.5) * 0.3;
+      velocities.current[i * 3] = (Math.random() - 0.5) * 0.4;
+      velocities.current[i * 3 + 1] = Math.random() * 0.4;
+      velocities.current[i * 3 + 2] = (Math.random() - 0.5) * 0.4;
+      
+      // Add color variation
+      const colorObj = new THREE.Color(color);
+      colors[i * 3] = colorObj.r * (0.8 + Math.random() * 0.4);
+      colors[i * 3 + 1] = colorObj.g * (0.8 + Math.random() * 0.4);
+      colors[i * 3 + 2] = colorObj.b * (0.8 + Math.random() * 0.4);
     }
-  }, []);
+  }, [color]);
 
   useFrame(() => {
     if (pointsRef.current && life.current > 0) {
@@ -225,10 +325,12 @@ function ImpactParticles({ position, color = '#ff0000' }: { position: [number, n
         posArray[i * 3] += velocities.current[i * 3];
         posArray[i * 3 + 1] += velocities.current[i * 3 + 1];
         posArray[i * 3 + 2] += velocities.current[i * 3 + 2];
-        velocities.current[i * 3 + 1] -= 0.01; // gravity
+        velocities.current[i * 3 + 1] -= 0.015; // gravity
+        velocities.current[i * 3] *= 0.98; // air resistance
+        velocities.current[i * 3 + 2] *= 0.98;
       }
       pointsRef.current.geometry.attributes.position.needsUpdate = true;
-      life.current -= 0.02;
+      life.current -= 0.025;
       
       if (life.current <= 0) {
         pointsRef.current.visible = false;
@@ -251,8 +353,79 @@ function ImpactParticles({ position, color = '#ff0000' }: { position: [number, n
           array={positions}
           itemSize={3}
         />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={colors}
+          itemSize={3}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.15} color={color} transparent opacity={0.8} sizeAttenuation />
+      <pointsMaterial 
+        size={0.2} 
+        vertexColors 
+        transparent 
+        opacity={0.9} 
+        sizeAttenuation 
+        blending={THREE.AdditiveBlending}
+      />
+    </points>
+  );
+}
+
+// Trail effect for player movement
+function PlayerTrail({ position, color = '#00ff88' }: { position: [number, number, number]; color?: string }) {
+  const trailRef = useRef<THREE.Points>(null);
+  const count = 20;
+  const positions = new Float32Array(count * 3);
+  const opacities = useRef<number[]>(new Array(count).fill(0));
+  const lastPosition = useRef<[number, number, number]>([0, 0, 0]);
+
+  useFrame(() => {
+    if (trailRef.current) {
+      const posArray = trailRef.current.geometry.attributes.position.array as Float32Array;
+      
+      // Shift all positions back
+      for (let i = count - 1; i > 0; i--) {
+        posArray[i * 3] = posArray[(i - 1) * 3];
+        posArray[i * 3 + 1] = posArray[(i - 1) * 3 + 1];
+        posArray[i * 3 + 2] = posArray[(i - 1) * 3 + 2];
+        opacities.current[i] = opacities.current[i - 1] * 0.9;
+      }
+      
+      // Add new position at the front
+      posArray[0] = position[0];
+      posArray[1] = position[1];
+      posArray[2] = position[2];
+      opacities.current[0] = 1;
+      
+      trailRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = position[0];
+    positions[i * 3 + 1] = position[1];
+    positions[i * 3 + 2] = position[2];
+  }
+
+  return (
+    <points ref={trailRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial 
+        size={0.1} 
+        color={color} 
+        transparent 
+        opacity={0.6} 
+        sizeAttenuation
+        blending={THREE.AdditiveBlending}
+      />
     </points>
   );
 }
@@ -410,10 +583,16 @@ function GameScene() {
       <Boundaries />
       <Particles color={mapData.id === 'frozen-tundra' ? '#ffffff' : '#a855f7'} />
 
-      {/* Players as humanoid characters */}
+      {/* Players as humanoid characters with trail effects */}
       {players.map((player: Player) => (
         player.isAlive && (
           <group key={player.id}>
+            {/* Player trail effect */}
+            <PlayerTrail 
+              position={player.position} 
+              color={player.id === 'local' ? '#00ff88' : '#ff6666'} 
+            />
+            
             <group
               onClick={(e) => {
                 e.stopPropagation();
@@ -444,18 +623,39 @@ function GameScene() {
                 isMoving={player.id === 'local' ? true : player.isBot}
               />
             </group>
-            {/* Name tag using Text */}
-            <Text
-              position={[player.position[0], 2.5, player.position[2]]}
-              fontSize={0.2}
-              color={player.id === 'local' ? '#00ff88' : '#ff6666'}
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={0.02}
-              outlineColor="#000000"
-            >
-              {player.name}
-            </Text>
+            {/* Name tag using Text with enhanced styling */}
+            <group position={[player.position[0], 2.5, player.position[2]]}>
+              {/* Background for better readability */}
+              <mesh position={[0, 0, -0.01]}>
+                <planeGeometry args={[1.2, 0.3]} />
+                <meshBasicMaterial 
+                  color="#000000" 
+                  transparent 
+                  opacity={0.5} 
+                />
+              </mesh>
+              <Text
+                fontSize={0.2}
+                color={player.id === 'local' ? '#00ff88' : '#ff6666'}
+                anchorX="center"
+                anchorY="middle"
+                outlineWidth={0.02}
+                outlineColor="#000000"
+              >
+                {player.name}
+              </Text>
+              {/* Health bar above name */}
+              <mesh position={[0, -0.25, 0]}>
+                <planeGeometry args={[1, 0.08]} />
+                <meshBasicMaterial color="#333333" />
+              </mesh>
+              <mesh position={[(player.health / player.maxHealth - 1) * 0.5, -0.25, 0.01]}>
+                <planeGeometry args={[player.health / player.maxHealth, 0.08]} />
+                <meshBasicMaterial 
+                  color={player.health > 50 ? '#00ff00' : player.health > 25 ? '#ffff00' : '#ff0000'} 
+                />
+              </mesh>
+            </group>
           </group>
         )
       ))}
@@ -713,37 +913,110 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
 
       {/* Top HUD */}
       <div className="absolute top-8 left-4 right-4 flex justify-between items-start">
-        {/* Player Stats */}
+        {/* Player Stats with enhanced UI */}
         <motion.div
           initial={{ x: -100, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 border border-gray-700/50 pointer-events-auto"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-2xl shadow-lg shadow-green-500/20">
+            <motion.div 
+              className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-2xl shadow-lg shadow-green-500/20"
+              animate={{
+                boxShadow: localPlayer && localPlayer.health < 30 
+                  ? ['0 0 20px rgba(239, 68, 68, 0.5)', '0 0 30px rgba(239, 68, 68, 0.8)', '0 0 20px rgba(239, 68, 68, 0.5)']
+                  : '0 10px 15px -3px rgba(34, 197, 94, 0.2)'
+              }}
+              transition={{ duration: 1, repeat: localPlayer && localPlayer.health < 30 ? Infinity : 0 }}
+            >
               {localPlayer?.skin}
-            </div>
+            </motion.div>
             <div>
               <p className="text-white font-bold">{localPlayer?.name}</p>
               <div className="flex gap-3 text-xs mt-0.5">
-                <span className="text-yellow-400 font-medium">💰 {localPlayer?.gold}</span>
-                <span className="text-blue-400 font-medium">💎 {localPlayer?.gems}</span>
+                <motion.span 
+                  className="text-yellow-400 font-medium"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  💰 {localPlayer?.gold}
+                </motion.span>
+                <motion.span 
+                  className="text-blue-400 font-medium"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                >
+                  💎 {localPlayer?.gems}
+                </motion.span>
               </div>
             </div>
           </div>
+          
+          {/* Health bar with enhanced visuals */}
           <div className="mt-3 w-44">
             <div className="flex justify-between text-xs mb-1">
               <span className="text-gray-400">HP</span>
-              <span className="text-white font-medium">{localPlayer?.health}/{localPlayer?.maxHealth}</span>
+              <motion.span 
+                className={`font-medium ${
+                  localPlayer && localPlayer.health < 30 ? 'text-red-400' : 
+                  localPlayer && localPlayer.health < 60 ? 'text-yellow-400' : 'text-white'
+                }`}
+                animate={{
+                  scale: localPlayer && localPlayer.health < 30 ? [1, 1.1, 1] : 1
+                }}
+                transition={{ duration: 0.5, repeat: localPlayer && localPlayer.health < 30 ? Infinity : 0 }}
+              >
+                {localPlayer?.health}/{localPlayer?.maxHealth}
+              </motion.span>
             </div>
-            <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative">
               <motion.div
-                className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+                className={`h-full rounded-full ${
+                  localPlayer && localPlayer.health < 30 ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                  localPlayer && localPlayer.health < 60 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
+                  'bg-gradient-to-r from-green-500 to-emerald-400'
+                }`}
                 animate={{ width: `${localPlayer?.health || 0}%` }}
                 transition={{ duration: 0.3 }}
               />
+              {/* Health bar glow effect */}
+              <motion.div
+                className="absolute inset-0 bg-white/20"
+                animate={{
+                  opacity: [0, 0.3, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                }}
+              />
             </div>
           </div>
+          
+          {/* Kill counter */}
+          <div className="mt-3 flex items-center gap-2">
+            <motion.div
+              className="flex items-center gap-1 bg-red-500/20 px-2 py-1 rounded-lg"
+              animate={{
+                scale: localPlayer && localPlayer.kills > 0 ? [1, 1.05, 1] : 1
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <span className="text-red-400 text-xs">⚔️</span>
+              <span className="text-red-400 text-xs font-bold">{localPlayer?.kills || 0}</span>
+            </motion.div>
+            <motion.div
+              className="flex items-center gap-1 bg-gray-500/20 px-2 py-1 rounded-lg"
+              animate={{
+                scale: localPlayer && localPlayer.deaths > 0 ? [1, 1.05, 1] : 1
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              <span className="text-gray-400 text-xs">💀</span>
+              <span className="text-gray-400 text-xs font-bold">{localPlayer?.deaths || 0}</span>
+            </motion.div>
+          </div>
+          
           {/* Sprint indicator */}
           {isSprinting && (
             <motion.div
@@ -751,7 +1024,17 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
               animate={{ opacity: 1, scale: 1 }}
               className="mt-2 flex items-center gap-1 text-xs text-yellow-400"
             >
-              <span>⚡</span>
+              <motion.span
+                animate={{
+                  rotate: [0, 10, -10, 0],
+                }}
+                transition={{
+                  duration: 0.5,
+                  repeat: Infinity,
+                }}
+              >
+                ⚡
+              </motion.span>
               <span className="font-bold">SPRINT</span>
             </motion.div>
           )}
@@ -807,6 +1090,38 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
             </div>
           </div>
           <p className="text-gray-400 text-[10px] text-center mt-1">Mini-carte</p>
+        </motion.div>
+
+        {/* Kill Feed / Notifications */}
+        <motion.div
+          initial={{ x: 100, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          className="bg-gray-900/80 backdrop-blur-md rounded-2xl p-3 border border-gray-700/50 max-w-xs"
+        >
+          <p className="text-gray-400 text-[10px] uppercase tracking-wider mb-2">Événements</p>
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {useGameStore(s => s.killFeed).slice(0, 5).map((kill, i) => (
+              <motion.div
+                key={kill.time}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ delay: i * 0.1 }}
+                className="text-xs bg-gray-800/50 rounded-lg px-2 py-1"
+              >
+                <span className={kill.killer === localPlayer?.name ? 'text-green-400' : 'text-red-400'}>
+                  {kill.killer}
+                </span>
+                <span className="text-gray-400"> {kill.method} </span>
+                <span className={kill.victim === localPlayer?.name ? 'text-red-400' : 'text-yellow-400'}>
+                  {kill.victim}
+                </span>
+              </motion.div>
+            ))}
+            {useGameStore(s => s.killFeed).length === 0 && (
+              <p className="text-gray-500 text-xs italic">Aucun événement</p>
+            )}
+          </div>
         </motion.div>
 
         {/* Swap Timer */}
@@ -1051,6 +1366,7 @@ export default function GamePage() {
   const selectedMap = useGameStore(s => s.selectedMap);
   const mapData = selectedMap ? getMapById(selectedMap) : getMapById('neon-city');
   const [showCraft, setShowCraft] = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (localPlayer && !localPlayer.isAlive && gameStatus === 'playing') {
@@ -1058,8 +1374,20 @@ export default function GamePage() {
     }
   }, [localPlayer?.isAlive, gameStatus]);
 
+  // Focus canvas on mount to ensure keyboard events work
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.focus();
+    }
+  }, []);
+
   return (
-    <div className="w-full h-screen relative bg-black overflow-hidden">
+    <div 
+      ref={canvasRef}
+      className="w-full h-screen relative bg-black overflow-hidden"
+      tabIndex={0}
+      style={{ outline: 'none' }}
+    >
       <Canvas
         shadows
         camera={{ position: [0, 4, 6], fov: 70 }}
@@ -1068,6 +1396,11 @@ export default function GamePage() {
           gl.setClearColor(mapData?.theme.fogColor || '#050010');
           gl.toneMapping = THREE.ACESFilmicToneMapping;
           gl.toneMappingExposure = 1.2;
+        }}
+        onPointerDown={() => {
+          if (canvasRef.current) {
+            canvasRef.current.focus();
+          }
         }}
       >
         <GameScene />

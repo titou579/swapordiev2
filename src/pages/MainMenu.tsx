@@ -125,55 +125,143 @@ export default function MainMenu() {
           </button>
         </motion.div>
 
-        {/* Main Play Button */}
+        {/* Main Play Button with enhanced animation */}
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, type: 'spring' }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ 
+            scale: 1.05,
+            boxShadow: '0 20px 40px -10px rgba(34, 197, 94, 0.5)',
+          }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setShowModeSelect(true)}
-          className="w-full py-5 px-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl text-white text-xl font-black shadow-lg shadow-green-500/25 transition-all border border-white/10 mb-4"
+          className="w-full py-5 px-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl text-white text-xl font-black shadow-lg shadow-green-500/25 transition-all border border-white/10 mb-4 relative overflow-hidden group"
         >
-          🎮 JOUER
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            animate={{
+              x: ['-100%', '100%'],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            <motion.span
+              animate={{
+                rotate: [0, 10, -10, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              🎮
+            </motion.span>
+            JOUER
+          </span>
         </motion.button>
 
-        {/* Secondary Buttons */}
+        {/* Secondary Buttons with enhanced animations */}
         <div className="w-full grid grid-cols-3 gap-3 mb-4">
           <motion.button
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: '0 10px 30px -5px rgba(234, 179, 8, 0.3)',
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('battlepass')}
-            className="py-4 px-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-yellow-500/20 transition-all"
+            className="py-4 px-3 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-yellow-500/20 transition-all relative overflow-hidden group"
           >
-            🎖️ Pass
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="relative z-10 flex flex-col items-center gap-1">
+              <motion.span
+                animate={{
+                  y: [0, -3, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                🎖️
+              </motion.span>
+              <span className="text-sm">Pass</span>
+            </span>
           </motion.button>
 
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: '0 10px 30px -5px rgba(168, 85, 247, 0.3)',
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('shop')}
-            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
+            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all relative overflow-hidden group"
           >
-            🛒 Boutique
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="relative z-10 flex flex-col items-center gap-1">
+              <motion.span
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                🛒
+              </motion.span>
+              <span className="text-sm">Boutique</span>
+            </span>
           </motion.button>
 
           <motion.button
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ 
+              scale: 1.05,
+              boxShadow: '0 10px 30px -5px rgba(59, 130, 246, 0.3)',
+            }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => actions.setPage('profile')}
-            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all"
+            className="py-4 px-3 bg-white/5 hover:bg-white/10 backdrop-blur-sm rounded-2xl text-white font-bold shadow-lg border border-white/10 transition-all relative overflow-hidden group"
           >
-            👤 Profil
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="relative z-10 flex flex-col items-center gap-1">
+              <motion.span
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                👤
+              </motion.span>
+              <span className="text-sm">Profil</span>
+            </span>
           </motion.button>
         </div>
 
