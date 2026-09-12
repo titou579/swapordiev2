@@ -2,11 +2,12 @@ import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { useGameStore, actions, Player, Resource, Trap as TrapType } from '../store/gameStore';
+import { useGameStore, actions, Player, Resource, Trap as TrapType, PowerUp as PowerUpType } from '../store/gameStore';
 import { getMapById } from '../data/maps';
 import Character from '../components/Character';
 import MapRenderer from '../components/MapRenderer';
 import CraftMenu from '../components/CraftMenu';
+import PowerUpMesh from '../components/PowerUp';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Ground Component
@@ -255,25 +256,45 @@ function TrapMesh({ trap }: { trap: TrapType }) {
   );
 }
 
-// Floating particles
+// Floating particles with enhanced effects
 function Particles({ color }: { color: string }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const count = 150;
+  const count = 200;
   const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
     positions[i * 3] = (Math.random() - 0.5) * 60;
-    positions[i * 3 + 1] = Math.random() * 10;
+    positions[i * 3 + 1] = Math.random() * 15;
     positions[i * 3 + 2] = (Math.random() - 0.5) * 60;
+    
+    // Color variation
+    const colorObj = new THREE.Color(color);
+    colors[i * 3] = colorObj.r * (0.7 + Math.random() * 0.3);
+    colors[i * 3 + 1] = colorObj.g * (0.7 + Math.random() * 0.3);
+    colors[i * 3 + 2] = colorObj.b * (0.7 + Math.random() * 0.3);
+    
+    // Size variation
+    sizes[i] = 0.05 + Math.random() * 0.1;
   }
 
   useFrame((state) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = state.clock.elapsedTime * 0.02;
+      pointsRef.current.rotation.y = state.clock.elapsedTime * 0.03;
       const posArray = pointsRef.current.geometry.attributes.position.array as Float32Array;
       for (let i = 0; i < count; i++) {
-        posArray[i * 3 + 1] += Math.sin(state.clock.elapsedTime + i) * 0.002;
-        if (posArray[i * 3 + 1] > 10) posArray[i * 3 + 1] = 0;
+        // Floating motion
+        posArray[i * 3 + 1] += Math.sin(state.clock.elapsedTime * 0.5 + i) * 0.003;
+        posArray[i * 3] += Math.cos(state.clock.elapsedTime * 0.3 + i) * 0.001;
+        posArray[i * 3 + 2] += Math.sin(state.clock.elapsedTime * 0.4 + i) * 0.001;
+        
+        // Reset particles that go too high
+        if (posArray[i * 3 + 1] > 15) {
+          posArray[i * 3 + 1] = 0;
+          posArray[i * 3] = (Math.random() - 0.5) * 60;
+          posArray[i * 3 + 2] = (Math.random() - 0.5) * 60;
+        }
       }
       pointsRef.current.geometry.attributes.position.needsUpdate = true;
     }
@@ -288,8 +309,21 @@ function Particles({ color }: { color: string }) {
           array={positions}
           itemSize={3}
         />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={colors}
+          itemSize={3}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.08} color={color} transparent opacity={0.6} sizeAttenuation />
+      <pointsMaterial 
+        size={0.1} 
+        vertexColors 
+        transparent 
+        opacity={0.7} 
+        sizeAttenuation 
+        blending={THREE.AdditiveBlending}
+      />
     </points>
   );
 }
@@ -672,6 +706,15 @@ function GameScene() {
         <TrapMesh key={trap.id} trap={trap} />
       ))}
 
+      {useGameStore(s => s.powerUps).map((powerUp: PowerUpType) => (
+        <PowerUpMesh
+          key={powerUp.id}
+          powerUp={powerUp}
+          onCollect={() => actions.collectPowerUp(powerUp.id)}
+          playerPosition={localPlayer?.position || [0, 0, 0]}
+        />
+      ))}
+
       <CameraController />
       <BotAI />
     </>
@@ -1037,6 +1080,27 @@ function GameHUD({ showCraft, setShowCraft }: { showCraft: boolean; setShowCraft
               </motion.span>
               <span className="font-bold">SPRINT</span>
             </motion.div>
+          )}
+          
+          {/* Active power-ups */}
+          {localPlayer?.activePowerUps && localPlayer.activePowerUps.length > 0 && (
+            <div className="mt-2 flex gap-1">
+              {localPlayer.activePowerUps.map((pu, i) => {
+                const timeLeft = Math.max(0, Math.ceil((pu.expiresAt - Date.now()) / 1000));
+                const emoji = pu.type === 'speed' ? '⚡' : pu.type === 'damage' ? '💥' : pu.type === 'shield' ? '🛡️' : '🦘';
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="bg-gray-800/80 rounded-lg px-2 py-1 text-xs flex items-center gap-1"
+                  >
+                    <span>{emoji}</span>
+                    <span className="text-white font-bold">{timeLeft}s</span>
+                  </motion.div>
+                );
+              })}
+            </div>
           )}
         </motion.div>
 
